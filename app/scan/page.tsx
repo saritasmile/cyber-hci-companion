@@ -1,0 +1,325 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import type { FeedItemRow, FeedLens } from "@/types/database";
+
+// ── UI Primitives ────────────────────────────────────────────────────────────
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p
+      className="text-[9px] uppercase tracking-[0.25em] text-[#9d9080] mb-1"
+      style={{ fontFamily: "var(--font-mono)" }}
+    >
+      {children}
+    </p>
+  );
+}
+
+// ── Lens config ──────────────────────────────────────────────────────────────
+
+const LENS_CONFIG: Record<FeedLens, { label: string; color: string }> = {
+  analyst: { label: "Analyst", color: "#4eb8a0" },
+  hci: { label: "HCI", color: "#e8854a" },
+  commander: { label: "Commander", color: "#7b9fd4" },
+};
+
+const EFFORT_CONFIG: Record<string, { label: string; color: string }> = {
+  "5min": { label: "5 min", color: "#9d9080" },
+  "15min": { label: "15 min", color: "#9d9080" },
+  deep: { label: "Deep read", color: "#b07fd4" },
+};
+
+// ── Tag chip ─────────────────────────────────────────────────────────────────
+
+function Tag({ label, color }: { label: string; color: string }) {
+  return (
+    <span
+      className="inline-flex items-center px-2 py-0.5 rounded text-[10px] tracking-[0.1em] uppercase"
+      style={{
+        fontFamily: "var(--font-mono)",
+        color,
+        backgroundColor: color + "18",
+        border: `1px solid ${color}30`,
+      }}
+    >
+      {label}
+    </span>
+  );
+}
+
+// ── Feed Card ────────────────────────────────────────────────────────────────
+
+function FeedCard({ item, onGoDeep }: { item: FeedItemRow; onGoDeep: (topic: string) => void }) {
+  const lens = LENS_CONFIG[item.lens];
+  const effort = EFFORT_CONFIG[item.effort] ?? { label: item.effort, color: "#9d9080" };
+
+  const dateStr = new Date(item.published_at).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+
+  return (
+    <article
+      className="relative bg-[#161412] border border-[#2a2520] rounded-lg p-5 flex flex-col gap-3 transition-colors hover:border-[#3a3530]"
+      style={item.is_featured ? { borderLeftColor: lens.color, borderLeftWidth: "3px" } : undefined}
+    >
+      {item.is_featured && (
+        <span
+          className="absolute top-4 right-4 text-[9px] uppercase tracking-[0.2em] px-2 py-0.5 rounded"
+          style={{
+            fontFamily: "var(--font-mono)",
+            color: lens.color,
+            backgroundColor: lens.color + "18",
+          }}
+        >
+          Featured
+        </span>
+      )}
+
+      {/* Header */}
+      <div>
+        <SectionLabel>{item.source} · {dateStr}</SectionLabel>
+        <h2
+          className="text-base font-semibold text-[#e8e0d4] leading-snug pr-16"
+          style={{ fontFamily: "var(--font-heading)" }}
+        >
+          {item.title}
+        </h2>
+      </div>
+
+      {/* Excerpt */}
+      <p className="text-sm text-[#9d9080] leading-relaxed line-clamp-3">
+        {item.excerpt}
+      </p>
+
+      {/* Tags + action */}
+      <div className="flex flex-wrap items-center gap-2 pt-1">
+        <Tag label={lens.label} color={lens.color} />
+        <Tag label={effort.label} color={effort.color} />
+        <Tag label={item.topic} color="#c9a96e" />
+
+        <div className="ml-auto">
+          <button
+            onClick={() => onGoDeep(item.topic)}
+            className="px-3 py-1.5 rounded text-[11px] tracking-[0.12em] uppercase transition-colors"
+            style={{
+              fontFamily: "var(--font-mono)",
+              color: lens.color,
+              backgroundColor: lens.color + "10",
+              border: `1px solid ${lens.color}40`,
+            }}
+          >
+            Go deep →
+          </button>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+// ── Filter bar ───────────────────────────────────────────────────────────────
+
+type FilterKey = "all" | FeedLens;
+
+const FILTERS: { key: FilterKey; label: string; color: string }[] = [
+  { key: "all", label: "All", color: "#9d9080" },
+  { key: "analyst", label: "Analyst", color: "#4eb8a0" },
+  { key: "hci", label: "HCI", color: "#e8854a" },
+  { key: "commander", label: "Commander", color: "#7b9fd4" },
+];
+
+// ── Skeleton loader ──────────────────────────────────────────────────────────
+
+function SkeletonCard() {
+  return (
+    <div className="bg-[#161412] border border-[#2a2520] rounded-lg p-5 animate-pulse space-y-3">
+      <div className="h-2 w-32 bg-[#2a2520] rounded" />
+      <div className="h-4 bg-[#2a2520] rounded w-3/4" />
+      <div className="space-y-2">
+        <div className="h-3 bg-[#2a2520] rounded w-full" />
+        <div className="h-3 bg-[#2a2520] rounded w-5/6" />
+        <div className="h-3 bg-[#2a2520] rounded w-4/5" />
+      </div>
+      <div className="flex gap-2 pt-1">
+        <div className="h-5 w-16 bg-[#2a2520] rounded" />
+        <div className="h-5 w-16 bg-[#2a2520] rounded" />
+        <div className="h-5 w-24 bg-[#2a2520] rounded" />
+      </div>
+    </div>
+  );
+}
+
+// ── Main page ────────────────────────────────────────────────────────────────
+
+export default function ScanPage() {
+  const router = useRouter();
+  const [items, setItems] = useState<FeedItemRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [filter, setFilter] = useState<FilterKey>("all");
+
+  useEffect(() => {
+    async function fetchFeed() {
+      try {
+        const { data, error: dbErr } = await supabase
+          .from("feed_items")
+          .select("*")
+          .order("published_at", { ascending: false });
+
+        if (dbErr) throw new Error(dbErr.message);
+        setItems(data ?? []);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load feed.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchFeed();
+  }, []);
+
+  function handleGoDeep(topic: string) {
+    router.push(`/study?topic=${encodeURIComponent(topic)}`);
+  }
+
+  const visible =
+    filter === "all" ? items : items.filter((item) => item.lens === filter);
+
+  const counts: Record<FilterKey, number> = {
+    all: items.length,
+    analyst: items.filter((i) => i.lens === "analyst").length,
+    hci: items.filter((i) => i.lens === "hci").length,
+    commander: items.filter((i) => i.lens === "commander").length,
+  };
+
+  return (
+    <div className="px-10 py-10 max-w-5xl">
+      {/* Header */}
+      <div className="mb-8">
+        <p
+          className="text-[10px] uppercase tracking-[0.25em] text-[#9d9080] mb-1"
+          style={{ fontFamily: "var(--font-mono)" }}
+        >
+          Module
+        </p>
+        <h1
+          className="text-3xl font-bold text-[#e8e0d4] mb-2 leading-tight"
+          style={{ fontFamily: "var(--font-heading)" }}
+        >
+          Horizon Scan
+        </h1>
+        <p className="text-sm text-[#9d9080] max-w-xl leading-relaxed">
+          Curated intelligence — advisories, academic papers, and incident analyses — filtered by
+          the lens most relevant to your role.
+        </p>
+      </div>
+
+      {/* Filter bar */}
+      <div className="flex flex-wrap gap-2 mb-7">
+        {FILTERS.map((f) => {
+          const isActive = filter === f.key;
+          return (
+            <button
+              key={f.key}
+              onClick={() => setFilter(f.key)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[11px] tracking-[0.1em] uppercase transition-colors"
+              style={{
+                fontFamily: "var(--font-mono)",
+                color: isActive ? f.color : "#9d9080",
+                borderColor: isActive ? f.color : "#2a2520",
+                backgroundColor: isActive ? f.color + "12" : "#161412",
+              }}
+            >
+              {f.label}
+              <span
+                className="text-[10px] opacity-70"
+                style={{ color: isActive ? f.color : "#9d9080" }}
+              >
+                {counts[f.key]}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Error */}
+      {error && (
+        <div className="bg-[#161412] border border-[#e8854a]/30 rounded-lg p-5 mb-6">
+          <p
+            className="text-[10px] uppercase tracking-[0.2em] text-[#e8854a] mb-1"
+            style={{ fontFamily: "var(--font-mono)" }}
+          >
+            Error
+          </p>
+          <p className="text-sm text-[#9d9080]">{error}</p>
+          <p className="text-xs text-[#9d9080] mt-2">
+            Make sure the{" "}
+            <code
+              className="text-[#e8854a]"
+              style={{ fontFamily: "var(--font-mono)" }}
+            >
+              feed_items
+            </code>{" "}
+            table is seeded — run{" "}
+            <code
+              className="text-[#e8854a]"
+              style={{ fontFamily: "var(--font-mono)" }}
+            >
+              supabase/seed_feed_items.sql
+            </code>{" "}
+            in your Supabase SQL editor.
+          </p>
+        </div>
+      )}
+
+      {/* Loading skeletons */}
+      {loading && (
+        <div className="space-y-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <SkeletonCard key={i} />
+          ))}
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!loading && !error && visible.length === 0 && (
+        <div className="bg-[#161412] border border-[#2a2520] rounded-lg p-8 text-center">
+          <p
+            className="text-[10px] uppercase tracking-[0.2em] text-[#9d9080] mb-2"
+            style={{ fontFamily: "var(--font-mono)" }}
+          >
+            No items
+          </p>
+          <p className="text-sm text-[#9d9080]">
+            {filter === "all"
+              ? "No feed items found. Seed the database to get started."
+              : `No items tagged with the ${filter} lens.`}
+          </p>
+        </div>
+      )}
+
+      {/* Feed */}
+      {!loading && !error && visible.length > 0 && (
+        <div className="space-y-4">
+          {visible.map((item) => (
+            <FeedCard key={item.id} item={item} onGoDeep={handleGoDeep} />
+          ))}
+        </div>
+      )}
+
+      {/* Footer note */}
+      {!loading && !error && visible.length > 0 && (
+        <p
+          className="mt-8 text-[10px] text-[#9d9080] text-center"
+          style={{ fontFamily: "var(--font-mono)" }}
+        >
+          {visible.length} item{visible.length !== 1 ? "s" : ""} · Click &ldquo;Go deep →&rdquo; to open a topic in Guided Study
+        </p>
+      )}
+    </div>
+  );
+}

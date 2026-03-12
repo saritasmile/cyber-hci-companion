@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -118,6 +119,7 @@ const DEPTH_OPTIONS: { value: DepthKey; label: string; description: string }[] =
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function StudyPage() {
+  const searchParams = useSearchParams();
   const [topic, setTopic] = useState("");
   const [depth, setDepth] = useState<DepthKey>("overview");
   const [streaming, setStreaming] = useState(false);
@@ -128,6 +130,12 @@ export default function StudyPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const currentTopicRef = useRef("");
+
+  // Pre-fill topic from ?topic= query param (e.g. from Horizon Scan "Go deep" button)
+  useEffect(() => {
+    const prefill = searchParams.get("topic");
+    if (prefill) setTopic(decodeURIComponent(prefill));
+  }, [searchParams]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
