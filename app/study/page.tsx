@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
@@ -118,7 +118,7 @@ const DEPTH_OPTIONS: { value: DepthKey; label: string; description: string }[] =
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
-export default function StudyPage() {
+function StudyPageInner() {
   const searchParams = useSearchParams();
   const [topic, setTopic] = useState("");
   const [depth, setDepth] = useState<DepthKey>("overview");
@@ -497,5 +497,13 @@ export default function StudyPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function StudyPage() {
+  return (
+    <Suspense>
+      <StudyPageInner />
+    </Suspense>
   );
 }

@@ -1,9 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
 import type { ModuleConfig } from "@/types";
+import type { User } from "@supabase/supabase-js";
 
 const modules: ModuleConfig[] = [
   {
@@ -66,6 +69,33 @@ const accentBgActive: Record<string, string> = {
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setUser(data.user));
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Hide sidebar on auth routes (after all hooks)
+  if (pathname.startsWith("/auth")) return null;
+
+  async function handleSignOut() {
+    await supabase.auth.signOut();
+    // Clear session cookie
+    document.cookie = "cyber-hci-session=; path=/; max-age=0";
+    router.push("/auth");
+  }
+
+  const displayEmail = user?.email ?? null;
+  const avatarLetter = displayEmail ? displayEmail[0].toUpperCase() : null;
 
   return (
     <aside className="w-64 shrink-0 h-screen sticky top-0 flex flex-col border-r border-[#2a2520] bg-[#0f0e0d]">
@@ -143,14 +173,57 @@ export default function Sidebar() {
         </div>
       </nav>
 
-      {/* Footer */}
-      <div className="px-6 py-4 border-t border-[#2a2520]">
-        <p
-          className="text-[10px] text-[#9d9080]"
-          style={{ fontFamily: "var(--font-mono)" }}
-        >
-          v0.1.0 &mdash; Est. 2026
-        </p>
+      {/* Footer — user section */}
+      <div className="px-4 py-4 border-t border-[#2a2520]">
+        {user ? (
+          /* Authenticated */
+          <div className="flex items-center gap-3">
+            <div
+              className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-[11px] font-bold"
+              style={{
+                backgroundColor: "#c9a96e20",
+                border: "1px solid #c9a96e40",
+                color: "#c9a96e",
+                fontFamily: "var(--font-mono)",
+              }}
+            >
+              {avatarLetter}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p
+                className="text-[10px] text-[#e8e0d4] truncate"
+                style={{ fontFamily: "var(--font-mono)" }}
+              >
+                {displayEmail}
+              </p>
+            </div>
+            <button
+              onClick={handleSignOut}
+              title="Sign out"
+              className="shrink-0 text-[#9d9080] hover:text-[#e8854a] transition-colors"
+              style={{ fontFamily: "var(--font-mono)", fontSize: "10px" }}
+            >
+              ↪
+            </button>
+          </div>
+        ) : (
+          /* Guest */
+          <div className="flex items-center justify-between">
+            <p
+              className="text-[10px] text-[#9d9080]"
+              style={{ fontFamily: "var(--font-mono)" }}
+            >
+              Guest mode
+            </p>
+            <Link
+              href="/auth"
+              className="text-[10px] text-[#c9a96e] hover:text-[#e8e0d4] transition-colors"
+              style={{ fontFamily: "var(--font-mono)" }}
+            >
+              Sign in →
+            </Link>
+          </div>
+        )}
       </div>
     </aside>
   );
