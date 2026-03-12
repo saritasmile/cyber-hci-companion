@@ -4,7 +4,7 @@ const moduleCards = [
   {
     label: "Scenario Intelligence",
     description: "Analyze real-world cyber incidents through a UX lens. Understand how human factors shape attack surfaces and defense strategies.",
-    href: "/scenario-intelligence",
+    href: "/scenarios",
     accent: "#4eb8a0",
     tag: "ANALYST",
     icon: "⬡",

@@ -10,7 +10,7 @@ const modules: ModuleConfig[] = [
     id: "scenario-intelligence",
     label: "Scenario Intelligence",
     description: "Analyze real-world cyber incidents through a UX lens",
-    href: "/scenario-intelligence",
+    href: "/scenarios",
     accent: "analyst",
     icon: "⬡",
   },
