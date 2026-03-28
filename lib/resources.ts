@@ -337,23 +337,23 @@ export const resources: Resource[] = [
 ];
 
 export const RESOURCE_TYPE_CONFIG: Record<string, { label: string; icon: string; color: string; bg: string; bdr: string }> = {
-  course:  { label: "Course",   icon: "◈", color: "#0a7a68", bg: "#e8f5f2", bdr: "#b0dbd4" },
-  book:    { label: "Book",     icon: "◇", color: "#8a5a1a", bg: "#faf0e0", bdr: "#d4a860" },
-  tool:    { label: "Tool",     icon: "⬡", color: "#1a4e8a", bg: "#e8f0fa", bdr: "#a8c4e8" },
-  youtube: { label: "YouTube",  icon: "▷", color: "#b01a1a", bg: "#fdeaea", bdr: "#e8b0b0" },
-  reddit:  { label: "Reddit",   icon: "◎", color: "#c04a0a", bg: "#fdf0e8", bdr: "#f0c4a0" },
-  expert:  { label: "Expert",   icon: "◉", color: "#6a3a9a", bg: "#f2ecfa", bdr: "#c8a8e8" },
+  course:  { label: "Course",   icon: "◈", color: "#5a7c3a", bg: "#edf4e4", bdr: "#b0cc90" },  // leaf
+  book:    { label: "Book",     icon: "◇", color: "#c8924a", bg: "#f5ede0", bdr: "#d8c4a4" },  // oak
+  tool:    { label: "Tool",     icon: "⬡", color: "#3d7a8a", bg: "#e8f2f5", bdr: "#a8ccd8" },  // pool
+  youtube: { label: "YouTube",  icon: "▷", color: "#7a3828", bg: "#f5ecea", bdr: "#d4aca4" },  // clay
+  reddit:  { label: "Reddit",   icon: "◎", color: "#3d7a8a", bg: "#e8f2f5", bdr: "#a8ccd8" },  // pool
+  expert:  { label: "Expert",   icon: "◉", color: "#c8924a", bg: "#f5ede0", bdr: "#d8c4a4" },  // oak
 };
 
 export const RESOURCE_STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; bdr: string }> = {
-  saved:        { label: "Saved",        color: "#1a4e8a", bg: "#e8f0fa", bdr: "#a8c4e8" },
-  in_progress:  { label: "In Progress",  color: "#8a5a1a", bg: "#faf0e0", bdr: "#d4a860" },
-  completed:    { label: "Completed",    color: "#0a7a68", bg: "#e8f5f2", bdr: "#b0dbd4" },
-  not_interested: { label: "Not Interested", color: "#8c7d74", bg: "#f2ede6", bdr: "#d8cfc4" },
+  saved:          { label: "Saved",          color: "#3d7a8a", bg: "#e8f2f5", bdr: "#a8ccd8" },  // pool
+  in_progress:    { label: "In Progress",    color: "#c8924a", bg: "#f5ede0", bdr: "#d8c4a4" },  // oak
+  completed:      { label: "Completed",      color: "#5a7c3a", bg: "#edf4e4", bdr: "#b0cc90" },  // leaf
+  not_interested: { label: "Not Interested", color: "#6b6560", bg: "#e8e5e1", bdr: "#b8b4ac" },  // concrete dim
 };
 
 export const COST_CONFIG: Record<string, { label: string; color: string }> = {
-  free:     { label: "Free",     color: "#0a7a68" },
-  freemium: { label: "Freemium", color: "#8a5a1a" },
-  paid:     { label: "Paid",     color: "#8c7d74" },
+  free:     { label: "Free",     color: "#5a7c3a" },  // leaf
+  freemium: { label: "Freemium", color: "#c8924a" },  // oak
+  paid:     { label: "Paid",     color: "#6b6560" },  // concrete dim
 };

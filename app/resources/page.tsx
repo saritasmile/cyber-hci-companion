@@ -167,7 +167,7 @@ function ResourceCard({
   const typeCfg = RESOURCE_TYPE_CONFIG[resource.type];
 
   return (
-    <div className="card p-5 flex flex-col gap-3" style={{ opacity: status === "not_interested" ? 0.45 : 1 }}>
+    <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", padding: "20px", display: "flex", flexDirection: "column", gap: "12px", opacity: status === "not_interested" ? 0.45 : 1 }}>
       {/* Top row */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2 flex-wrap">
@@ -204,7 +204,7 @@ function ResourceCard({
       {/* Suggestion reason */}
       {suggestionReason && (
         <div className="text-[10px] leading-relaxed px-3 py-2"
-          style={{ fontFamily: "var(--font-mono)", color: "#6a3a9a", backgroundColor: "#f2ecfa", borderLeft: "2px solid #c8a8e8", borderRadius: "0 2px 2px 0" }}>
+          style={{ fontFamily: "var(--font-mono)", color: "var(--oak)", backgroundColor: "var(--oak-bg)", borderLeft: "2px solid var(--oak-bdr)" }}>
           {suggestionReason}
         </div>
       )}
@@ -339,40 +339,38 @@ export default function ResourcesPage() {
   const savedCount = Object.values(statusMap).filter((s) => s === "saved").length;
 
   const TABS = [
-    { id: "library" as const, label: "Library", accent: "#0a7a68" },
-    { id: "suggested" as const, label: "Suggested for You", accent: "#6a3a9a" },
+    { id: "library" as const, label: "Library", accent: "#5a7c3a" },       // leaf
+    { id: "suggested" as const, label: "Suggested for You", accent: "#c8924a" }, // oak
   ];
 
   return (
-    <div className="px-10 py-10 max-w-5xl responsive-padding">
+    <div style={{ padding: "48px 56px 80px", maxWidth: "980px" }}>
       {/* Header */}
-      <div className="mb-8">
-        <p className="text-[10px] uppercase tracking-[0.3em] mb-3"
-          style={{ fontFamily: "var(--font-mono)", color: "var(--text-dim)" }}>
+      <div style={{ marginBottom: "32px" }}>
+        <p style={{ fontFamily: "var(--font-mono)", fontSize: "8px", letterSpacing: "0.28em", textTransform: "uppercase", color: "var(--text-dim)", marginBottom: "10px" }}>
           Module 07 — Learning Resources
         </p>
-        <h1 className="page-title mb-3" style={{ fontFamily: "var(--font-heading)" }}>
+        <h1 style={{ fontSize: "26px", fontWeight: 600, color: "var(--text)", letterSpacing: "-0.02em", marginBottom: "10px" }}>
           Learning Resources
         </h1>
-        <p className="text-sm max-w-xl leading-relaxed" style={{ color: "var(--text-mid)" }}>
+        <p style={{ fontSize: "14px", color: "var(--text-mid)", lineHeight: 1.65, maxWidth: "480px" }}>
           Courses, books, tools, YouTube channels, communities, and experts — curated for the security-minded UX practitioner. Track what you're exploring and get AI-powered suggestions based on your scenario history.
         </p>
       </div>
 
       {/* Progress stats */}
       {!loadingProgress && (
-        <div className="grid grid-cols-3 gap-3 mb-8 max-w-sm">
+        <div style={{ display: "flex", gap: "10px", marginBottom: "28px" }}>
           {[
-            { label: "Completed", value: completedCount, color: "#0a7a68" },
-            { label: "In Progress", value: inProgressCount, color: "#8a5a1a" },
-            { label: "Saved", value: savedCount, color: "#1a4e8a" },
+            { label: "Completed", value: completedCount, color: "#5a7c3a" },
+            { label: "In Progress", value: inProgressCount, color: "#c8924a" },
+            { label: "Saved", value: savedCount, color: "#3d7a8a" },
           ].map((stat) => (
-            <div key={stat.label} className="card p-3 text-center">
-              <p className="text-xl font-bold mb-0.5" style={{ fontFamily: "var(--font-heading)", color: stat.color }}>
+            <div key={stat.label} style={{ background: "var(--bg-card)", border: "1px solid var(--border)", padding: "12px 18px", textAlign: "center" }}>
+              <p style={{ fontFamily: "var(--font-heading)", fontSize: "22px", fontWeight: 700, color: stat.color, marginBottom: "2px" }}>
                 {stat.value}
               </p>
-              <p className="text-[8px] uppercase tracking-[0.15em]"
-                style={{ fontFamily: "var(--font-mono)", color: "var(--text-dim)" }}>
+              <p style={{ fontFamily: "var(--font-mono)", fontSize: "8px", letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--text-dim)" }}>
                 {stat.label}
               </p>
             </div>
@@ -381,21 +379,22 @@ export default function ResourcesPage() {
       )}
 
       {/* Tab bar */}
-      <div className="flex gap-0 mb-6 overflow-x-auto"
-        style={{ borderBottom: "2px solid var(--border)", scrollbarWidth: "none" } as React.CSSProperties}>
+      <div style={{ display: "flex", borderBottom: "1px solid var(--border)", marginBottom: "20px", overflowX: "auto" }}>
         {TABS.map((tab) => {
           const isActive = activeTab === tab.id;
           return (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              className="relative shrink-0 px-4 py-3 text-[11px] tracking-[0.12em] uppercase transition-colors"
               style={{
-                fontFamily: "var(--font-mono)",
+                flexShrink: 0, padding: "10px 16px",
+                fontFamily: "var(--font-mono)", fontSize: "9px",
+                letterSpacing: "0.12em", textTransform: "uppercase",
                 color: isActive ? tab.accent : "var(--text-dim)",
-                borderBottom: isActive ? `3px solid ${tab.accent}` : "3px solid transparent",
-                marginBottom: "-2px",
-                backgroundColor: "transparent",
+                borderBottom: `2px solid ${isActive ? tab.accent : "transparent"}`,
+                marginBottom: "-1px", background: "transparent", border: "none",
+                borderBottomStyle: "solid", borderBottomWidth: "2px",
+                borderBottomColor: isActive ? tab.accent : "transparent",
+                cursor: "pointer",
               }}>
-              {isActive && <span className="absolute inset-0 rounded-t" style={{ backgroundColor: tab.accent + "12" }} />}
               {tab.label}
             </button>
           );
@@ -406,85 +405,49 @@ export default function ResourcesPage() {
       {activeTab === "library" && (
         <div>
           {/* Filters */}
-          <div className="flex flex-wrap gap-3 mb-6 items-center">
-            {/* Type filter */}
-            <div className="flex gap-1 flex-wrap">
-              <button
-                onClick={() => setFilterType("all")}
-                className="text-[9px] tracking-[0.12em] uppercase px-2 py-1 border transition-colors"
-                style={{
-                  fontFamily: "var(--font-mono)", borderRadius: "2px",
-                  color: filterType === "all" ? "var(--text)" : "var(--text-dim)",
-                  borderColor: filterType === "all" ? "var(--border-hi)" : "var(--border)",
-                  backgroundColor: filterType === "all" ? "var(--bg-subtle)" : "transparent",
-                }}>
-                All Types
-              </button>
-              {ALL_TYPES.map((t) => {
-                const cfg = RESOURCE_TYPE_CONFIG[t];
-                const isActive = filterType === t;
-                return (
-                  <button key={t} onClick={() => setFilterType(isActive ? "all" : t)}
-                    className="text-[9px] tracking-[0.12em] uppercase px-2 py-1 border transition-colors"
-                    style={{
-                      fontFamily: "var(--font-mono)", borderRadius: "2px",
-                      color: isActive ? cfg.color : "var(--text-dim)",
-                      borderColor: isActive ? cfg.bdr : "var(--border)",
-                      backgroundColor: isActive ? cfg.bg : "transparent",
-                    }}>
-                    {cfg.icon} {cfg.label}
-                  </button>
-                );
-              })}
-            </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "16px", alignItems: "center" }}>
+            <button
+              onClick={() => setFilterType("all")}
+              style={{ fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.1em", textTransform: "uppercase", padding: "4px 10px", border: `1px solid ${filterType === "all" ? "var(--border-hi)" : "var(--border)"}`, background: filterType === "all" ? "var(--bg-subtle)" : "transparent", color: filterType === "all" ? "var(--text)" : "var(--text-dim)", cursor: "pointer" }}>
+              All Types
+            </button>
+            {ALL_TYPES.map((t) => {
+              const cfg = RESOURCE_TYPE_CONFIG[t];
+              const isActive = filterType === t;
+              return (
+                <button key={t} onClick={() => setFilterType(isActive ? "all" : t)}
+                  style={{ fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.1em", textTransform: "uppercase", padding: "4px 10px", border: `1px solid ${isActive ? cfg.bdr : "var(--border)"}`, background: isActive ? cfg.bg : "transparent", color: isActive ? cfg.color : "var(--text-dim)", cursor: "pointer" }}>
+                  {cfg.icon} {cfg.label}
+                </button>
+              );
+            })}
 
-            {/* Divider */}
-            <div style={{ width: "1px", height: "20px", backgroundColor: "var(--border)" }} />
+            <div style={{ width: "1px", height: "18px", background: "var(--border)" }} />
 
-            {/* Cost filter */}
             {(["all", "free", "freemium", "paid"] as const).map((c) => (
               <button key={c} onClick={() => setFilterCost(c)}
-                className="text-[9px] tracking-[0.12em] uppercase px-2 py-1 border transition-colors"
-                style={{
-                  fontFamily: "var(--font-mono)", borderRadius: "2px",
-                  color: filterCost === c ? "var(--text)" : "var(--text-dim)",
-                  borderColor: filterCost === c ? "var(--border-hi)" : "var(--border)",
-                  backgroundColor: filterCost === c ? "var(--bg-subtle)" : "transparent",
-                }}>
+                style={{ fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.1em", textTransform: "uppercase", padding: "4px 10px", border: `1px solid ${filterCost === c ? "var(--border-hi)" : "var(--border)"}`, background: filterCost === c ? "var(--bg-subtle)" : "transparent", color: filterCost === c ? "var(--text)" : "var(--text-dim)", cursor: "pointer" }}>
                 {c === "all" ? "Any Cost" : COST_CONFIG[c].label}
               </button>
             ))}
 
-            {/* Divider */}
-            <div style={{ width: "1px", height: "20px", backgroundColor: "var(--border)" }} />
+            <div style={{ width: "1px", height: "18px", background: "var(--border)" }} />
 
-            {/* Status filter */}
-            {([
-              { value: "all", label: "All" },
-              { value: "saved", label: "Saved" },
-              { value: "in_progress", label: "In Progress" },
-              { value: "completed", label: "Completed" },
-            ] as const).map((s) => (
+            {([{ value: "all", label: "All" }, { value: "saved", label: "Saved" }, { value: "in_progress", label: "In Progress" }, { value: "completed", label: "Completed" }] as const).map((s) => (
               <button key={s.value} onClick={() => setFilterStatus(s.value)}
-                className="text-[9px] tracking-[0.12em] uppercase px-2 py-1 border transition-colors"
-                style={{
-                  fontFamily: "var(--font-mono)", borderRadius: "2px",
-                  color: filterStatus === s.value ? "var(--text)" : "var(--text-dim)",
-                  borderColor: filterStatus === s.value ? "var(--border-hi)" : "var(--border)",
-                  backgroundColor: filterStatus === s.value ? "var(--bg-subtle)" : "transparent",
-                }}>
+                style={{ fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.1em", textTransform: "uppercase", padding: "4px 10px", border: `1px solid ${filterStatus === s.value ? "var(--border-hi)" : "var(--border)"}`, background: filterStatus === s.value ? "var(--bg-subtle)" : "transparent", color: filterStatus === s.value ? "var(--text)" : "var(--text-dim)", cursor: "pointer" }}>
                 {s.label}
               </button>
             ))}
           </div>
 
           {/* Result count */}
-          <p className="text-[10px] mb-4" style={{ fontFamily: "var(--font-mono)", color: "var(--text-dim)" }}>
+          <p style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--text-dim)", marginBottom: "14px" }}>
             {filteredResources.length} resource{filteredResources.length !== 1 ? "s" : ""}
           </p>
 
           {/* Grid */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1px", background: "var(--border)" }}>
             {filteredResources.map((r) => (
               <ResourceCard
                 key={r.id}
@@ -496,8 +459,8 @@ export default function ResourcesPage() {
           </div>
 
           {filteredResources.length === 0 && (
-            <div className="card p-8 text-center">
-              <p className="text-sm" style={{ color: "var(--text-dim)" }}>No resources match these filters.</p>
+            <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", padding: "32px", textAlign: "center" }}>
+              <p style={{ fontSize: "13px", color: "var(--text-dim)" }}>No resources match these filters.</p>
             </div>
           )}
         </div>
@@ -509,8 +472,8 @@ export default function ResourcesPage() {
           {loadingSuggestions ? (
             <div className="space-y-4 animate-pulse">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="card p-5">
-                  <div className="h-2 w-24 rounded mb-4" style={{ backgroundColor: "#6a3a9a30" }} />
+                <div key={i} style={{ background: "var(--bg-card)", border: "1px solid var(--border)", padding: "20px" }}>
+                  <div className="h-2 w-24 mb-4" style={{ backgroundColor: "var(--bg-subtle)" }} />
                   <div className="space-y-2">
                     <div className="h-3 rounded w-full skeleton-line" />
                     <div className="h-3 rounded w-5/6 skeleton-line" />

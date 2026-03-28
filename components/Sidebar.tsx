@@ -48,6 +48,34 @@ const modules: ModuleConfig[] = [
     accent: "analyst",
     icon: "◈",
   },
+  {
+    id: "sessions",
+    label: "Sessions",
+    description: "AI-assembled and curated learning playlists",
+    href: "/sessions",
+    accent: "analyst",
+    icon: "◈",
+  },
+];
+
+// Separated modules — shown below a divider
+const secondaryModules: ModuleConfig[] = [
+  {
+    id: "glossary",
+    label: "Glossary",
+    description: "Terms saved while exploring",
+    href: "/glossary",
+    accent: "gold",
+    icon: "◉",
+  },
+  {
+    id: "knowledge-map",
+    label: "Knowledge Map",
+    description: "Visualize your learning connections",
+    href: "/knowledge-map",
+    accent: "gold",
+    icon: "◉",
+  },
 ];
 
 const SIDEBAR_BG          = "#1a1614";
@@ -59,8 +87,6 @@ const SIDEBAR_ACTIVE_TEXT = "#faf8f4";
 const SIDEBAR_ACTIVE_BDR  = "#d4a860";
 
 function NavLinks({ pathname, onNavClick }: { pathname: string; onNavClick?: () => void }) {
-  const isKmActive = pathname.startsWith("/knowledge-map");
-
   return (
     <>
       <p className="px-3 mb-2 text-[10px] uppercase tracking-[0.2em]"
@@ -87,18 +113,23 @@ function NavLinks({ pathname, onNavClick }: { pathname: string; onNavClick?: () 
         })}
       </ul>
 
-      {/* Knowledge Map */}
+      {/* Glossary + Knowledge Map */}
       <div className="mt-4 pt-4 px-3" style={{ borderTop: `1px solid ${SIDEBAR_BORDER}` }}>
-        <Link href="/knowledge-map" onClick={onNavClick}
-          className="flex items-center gap-3 px-3 py-2.5 rounded text-sm transition-colors border-l-2 pl-[10px]"
-          style={{
-            color: isKmActive ? SIDEBAR_ACTIVE_TEXT : SIDEBAR_TEXT,
-            backgroundColor: isKmActive ? SIDEBAR_ACTIVE_BG : "transparent",
-            borderLeftColor: isKmActive ? SIDEBAR_ACTIVE_BDR : "transparent",
-          }}>
-          <span className="text-base leading-none" style={{ color: "#d4a860" }}>◉</span>
-          <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px" }}>Knowledge Map</span>
-        </Link>
+        {secondaryModules.map((mod) => {
+          const isActive = pathname.startsWith(mod.href);
+          return (
+            <Link key={mod.id} href={mod.href} onClick={onNavClick}
+              className="flex items-center gap-3 px-3 py-2.5 rounded text-sm transition-colors border-l-2 pl-[10px]"
+              style={{
+                color: isActive ? SIDEBAR_ACTIVE_TEXT : SIDEBAR_TEXT,
+                backgroundColor: isActive ? SIDEBAR_ACTIVE_BG : "transparent",
+                borderLeftColor: isActive ? SIDEBAR_ACTIVE_BDR : "transparent",
+              }}>
+              <span className="text-base leading-none" style={{ color: "#d4a860" }}>{mod.icon}</span>
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px" }}>{mod.label}</span>
+            </Link>
+          );
+        })}
       </div>
     </>
   );

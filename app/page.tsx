@@ -180,9 +180,22 @@ function SessionCards({ recentTopics }: { recentTopics: string[] }) {
             <p style={{ fontSize: "15px", fontWeight: 500, color: "var(--text)", lineHeight: 1.3, marginBottom: "8px", letterSpacing: "-0.01em" }}>
               {sessionTitle}
             </p>
-            <p style={{ fontSize: "12px", color: "var(--text-mid)", lineHeight: 1.65, marginBottom: "16px" }}>
+            <p style={{ fontSize: "12px", color: "var(--text-mid)", lineHeight: 1.65, marginBottom: "14px" }}>
               Assembled from your recent scenario history. Covers ransomware response, pipeline security, and one UX angle you haven't seen yet.
             </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "16px" }}>
+              {[
+                { label: "MFA fatigue attacks — new research", type: "Article", duration: "5 min" },
+                { label: "John Hammond — ransomware breakdown", type: "Video", duration: "8 min" },
+                { label: "Alert fatigue — UX anti-pattern", type: "Pattern", duration: "4 min" },
+              ].map((item, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "12px", color: "var(--text-mid)" }}>
+                  <span style={{ width: "10px", height: "1px", background: "var(--border-hi)", flexShrink: 0 }} />
+                  <span style={{ flex: 1 }}>{item.label}</span>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "8px", color: "var(--text-dim)", flexShrink: 0 }}>{item.type} · {item.duration}</span>
+                </div>
+              ))}
+            </div>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--oak)" }}>
               Start session →
             </span>
@@ -207,9 +220,22 @@ function SessionCards({ recentTopics }: { recentTopics: string[] }) {
             <p style={{ fontSize: "15px", fontWeight: 500, color: "var(--text)", lineHeight: 1.3, marginBottom: "8px", letterSpacing: "-0.01em" }}>
               Understanding supply chain attacks
             </p>
-            <p style={{ fontSize: "12px", color: "var(--text-mid)", lineHeight: 1.65, marginBottom: "16px" }}>
+            <p style={{ fontSize: "12px", color: "var(--text-mid)", lineHeight: 1.65, marginBottom: "14px" }}>
               A deep curated playlist on supply chain compromise — from SolarWinds to XZ Utils. Mix of videos, articles, and one expert to follow.
             </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "16px" }}>
+              {[
+                { label: "Sandworm — Andy Greenberg (excerpt)", type: "Read", duration: "12 min" },
+                { label: "LiveOverflow — supply chain deep dive", type: "Video", duration: "18 min" },
+                { label: "+ 3 more items", type: "", duration: "" },
+              ].map((item, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "12px", color: "var(--text-mid)" }}>
+                  <span style={{ width: "10px", height: "1px", background: "var(--border-hi)", flexShrink: 0 }} />
+                  <span style={{ flex: 1 }}>{item.label}</span>
+                  {item.type && <span style={{ fontFamily: "var(--font-mono)", fontSize: "8px", color: "var(--text-dim)", flexShrink: 0 }}>{item.type} · {item.duration}</span>}
+                </div>
+              ))}
+            </div>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--pool)" }}>
               Start session →
             </span>
@@ -551,10 +577,8 @@ export default function Home() {
         display: "flex", alignItems: "flex-end", justifyContent: "space-between",
         marginBottom: "40px", paddingBottom: "22px", borderBottom: "1px solid var(--border)",
       }}>
-        <h1 style={{ fontSize: "26px", fontWeight: 300, color: "var(--text)", letterSpacing: "-0.02em" }}>
-          {greeting().replace(".", "")} <strong style={{ fontWeight: 600 }}>
-            {greeting().split(" ").slice(-1)[0].replace(".", "")}.
-          </strong>
+        <h1 style={{ fontSize: "26px", fontWeight: 500, color: "var(--text)", letterSpacing: "-0.02em" }}>
+          {greeting()}
         </h1>
         <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--text-dim)" }}>
           {todayLabel()}

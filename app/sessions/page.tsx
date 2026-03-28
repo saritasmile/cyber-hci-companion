@@ -423,7 +423,7 @@ export default function SessionsPage() {
         </p>
         <Link
           href="/"
-          style={{ fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--pool)", textDecoration: "none" }}
+          style={{ fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--oak)", textDecoration: "none" }}
         >
           Use the session generator on the dashboard →
         </Link>
