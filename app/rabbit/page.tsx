@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface RabbitResult { summary: string; analyst_note: string; hci_note: string; related: string[]; rabbit: string; }
 interface TrailEntry { keyword: string; result: RabbitResult; }
+interface Bookmark { topic: string; type: "topic" | "related" | "surprising"; }
 const MAX_TRAIL = 8;
 
 // ── UI Primitives ─────────────────────────────────────────────────────────────
@@ -49,6 +50,33 @@ function StreamingIndicator({ accent }: { accent: string }) {
   );
 }
 
+// ── Bookmark button ────────────────────────────────────────────────────────────
+
+function BookmarkButton({
+  saved,
+  onToggle,
+  size = "md",
+}: {
+  saved: boolean;
+  onToggle: () => void;
+  size?: "sm" | "md";
+}) {
+  return (
+    <button
+      onClick={(e) => { e.stopPropagation(); onToggle(); }}
+      title={saved ? "Remove bookmark" : "Bookmark"}
+      className="shrink-0 transition-all hover:scale-110 active:scale-95"
+      style={{
+        fontSize: size === "sm" ? "11px" : "14px",
+        color: saved ? "#d4a860" : "var(--text-dim)",
+        lineHeight: 1,
+      }}
+    >
+      {saved ? "★" : "☆"}
+    </button>
+  );
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function RabbitPage() {
@@ -57,6 +85,54 @@ export default function RabbitPage() {
   const [trail, setTrail] = useState<TrailEntry[]>([]);
   const [current, setCurrent] = useState<TrailEntry | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
+  const [bookmarksOpen, setBookmarksOpen] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  // ── Auth + load bookmarks ──────────────────────────────────────────────────
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) {
+        setUserId(data.user.id);
+        loadBookmarks(data.user.id);
+      }
+    });
+  }, []);
+
+  const loadBookmarks = useCallback(async (uid: string) => {
+    const { data } = await supabase
+      .from("rabbit_bookmarks")
+      .select("topic, type")
+      .eq("user_id", uid)
+      .order("created_at", { ascending: false });
+    if (data) setBookmarks(data as Bookmark[]);
+  }, []);
+
+  const isBookmarked = (topic: string, type: "topic" | "related") =>
+    bookmarks.some((b) => b.topic === topic && b.type === type);
+
+  const toggleBookmark = useCallback(async (topic: string, type: "topic" | "related") => {
+    if (!userId) return;
+    if (isBookmarked(topic, type)) {
+      setBookmarks((prev) => prev.filter((b) => !(b.topic === topic && b.type === type)));
+      await supabase
+        .from("rabbit_bookmarks")
+        .delete()
+        .eq("user_id", userId)
+        .eq("topic", topic)
+        .eq("type", type);
+    } else {
+      setBookmarks((prev) => [{ topic, type }, ...prev]);
+      await supabase
+        .from("rabbit_bookmarks")
+        .insert({ user_id: userId, topic, type });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, bookmarks]);
+
+  // ── Exploration ────────────────────────────────────────────────────────────
 
   async function explore(keyword: string) {
     if (!keyword.trim() || streaming) return;
@@ -89,6 +165,10 @@ export default function RabbitPage() {
       }
     } catch { /* Non-critical */ }
   }
+
+  const topicBookmarks = bookmarks.filter((b) => b.type === "topic");
+  const relatedBookmarks = bookmarks.filter((b) => b.type === "related");
+  const surprisingBookmarks = bookmarks.filter((b) => b.type === "surprising");
 
   return (
     <div className="px-10 py-10 max-w-3xl responsive-padding">
@@ -154,6 +234,90 @@ export default function RabbitPage() {
         </div>
       )}
 
+      {/* Bookmarks panel */}
+      {userId && bookmarks.length > 0 && (
+        <div className="mb-6 card overflow-hidden">
+          <button
+            onClick={() => setBookmarksOpen((o) => !o)}
+            className="w-full flex items-center justify-between px-4 py-3 text-left transition-colors hover:bg-[var(--bg-subtle)]"
+          >
+            <div className="flex items-center gap-2">
+              <span style={{ color: "#d4a860", fontSize: "13px" }}>★</span>
+              <span className="text-[10px] uppercase tracking-[0.2em]" style={{ fontFamily: "var(--font-mono)", color: "var(--text)" }}>
+                Bookmarks
+              </span>
+              <span
+                className="text-[9px] px-1.5 py-0.5 rounded"
+                style={{ fontFamily: "var(--font-mono)", backgroundColor: "#faf0e0", color: "#8a5a1a", border: "1px solid #d4a860" }}
+              >
+                {bookmarks.length}
+              </span>
+            </div>
+            <span className="text-[10px]" style={{ fontFamily: "var(--font-mono)", color: "var(--text-dim)", transform: bookmarksOpen ? "rotate(90deg)" : "none", display: "inline-block", transition: "transform 0.15s" }}>›</span>
+          </button>
+
+          {bookmarksOpen && (
+            <div className="px-4 pb-4 space-y-4" style={{ borderTop: "1px solid var(--border)" }}>
+              {topicBookmarks.length > 0 && (
+                <div className="pt-3">
+                  <p className="text-[9px] uppercase tracking-[0.2em] mb-2" style={{ fontFamily: "var(--font-mono)", color: "var(--text-dim)" }}>Topics</p>
+                  <div className="flex flex-wrap gap-2">
+                    {topicBookmarks.map((b) => (
+                      <div key={b.topic} className="flex items-center gap-1">
+                        <button
+                          onClick={() => explore(b.topic)}
+                          disabled={streaming}
+                          className="text-[11px] px-3 py-1.5 rounded-full border transition-all hover:scale-105 active:scale-95 disabled:opacity-40"
+                          style={{ fontFamily: "var(--font-mono)", borderColor: "#d4a860", backgroundColor: "#faf0e0", color: "#6a4010" }}
+                        >
+                          {b.topic}
+                        </button>
+                        <BookmarkButton size="sm" saved onToggle={() => toggleBookmark(b.topic, "topic")} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {relatedBookmarks.length > 0 && (
+                <div className={topicBookmarks.length > 0 ? "pt-2" : "pt-3"}>
+                  <p className="text-[9px] uppercase tracking-[0.2em] mb-2" style={{ fontFamily: "var(--font-mono)", color: "var(--text-dim)" }}>Related Concepts to Explore</p>
+                  <div className="flex flex-wrap gap-2">
+                    {relatedBookmarks.map((b) => (
+                      <div key={b.topic} className="flex items-center gap-1">
+                        <button
+                          onClick={() => explore(b.topic)}
+                          disabled={streaming}
+                          className="text-[11px] px-3 py-1.5 rounded-full border transition-all hover:scale-105 active:scale-95 disabled:opacity-40"
+                          style={{ fontFamily: "var(--font-mono)", borderColor: "#c8a8e8", backgroundColor: "#f2ecfa", color: "#4a1a7a" }}
+                        >
+                          {b.topic}
+                        </button>
+                        <BookmarkButton size="sm" saved onToggle={() => toggleBookmark(b.topic, "related")} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {surprisingBookmarks.length > 0 && (
+                <div className={topicBookmarks.length > 0 || relatedBookmarks.length > 0 ? "pt-2" : "pt-3"}>
+                  <p className="text-[9px] uppercase tracking-[0.2em] mb-2" style={{ fontFamily: "var(--font-mono)", color: "#8a5a1a" }}>Surprising Connections</p>
+                  <div className="space-y-2">
+                    {surprisingBookmarks.map((b) => (
+                      <div key={b.topic} className="flex items-start gap-2 p-3 rounded" style={{ backgroundColor: "#faf0e0", border: "1px solid #d4a860" }}>
+                        <p className="flex-1 text-xs leading-relaxed" style={{ color: "var(--text)" }}>{b.topic}</p>
+                        <BookmarkButton size="sm" saved onToggle={() => toggleBookmark(b.topic, "surprising")} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Error */}
       {error && (
         <div className="card p-5 mb-6" style={{ borderColor: "#f0c4a0" }}>
@@ -167,8 +331,14 @@ export default function RabbitPage() {
       {/* Current result */}
       {current && !streaming && (
         <div className="space-y-5">
-          <div className="flex items-baseline gap-3">
+          <div className="flex items-center gap-3">
             <h2 className="text-xl font-bold" style={{ fontFamily: "var(--font-heading)", color: "var(--text)" }}>{current.keyword}</h2>
+            {userId && (
+              <BookmarkButton
+                saved={isBookmarked(current.keyword, "topic")}
+                onToggle={() => toggleBookmark(current.keyword, "topic")}
+              />
+            )}
           </div>
 
           <Card>
@@ -194,23 +364,32 @@ export default function RabbitPage() {
               {current.result.related.map((concept, i) => {
                 const alreadyExplored = trail.some((t) => t.keyword === concept);
                 const atLimit = trail.length >= MAX_TRAIL;
+                const saved = isBookmarked(concept, "related");
                 return (
-                  <button
-                    key={i}
-                    onClick={() => { if (!streaming && !atLimit) explore(concept); }}
-                    disabled={streaming || atLimit}
-                    className="text-xs px-3 py-1.5 rounded-full border transition-all hover:scale-105 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
-                    style={{
-                      fontFamily: "var(--font-mono)",
-                      borderColor: alreadyExplored ? "#c8a8e8" : "var(--border)",
-                      backgroundColor: alreadyExplored ? "#f2ecfa" : "var(--bg-card)",
-                      color: alreadyExplored ? "#6a3a9a" : "var(--text-mid)",
-                    }}
-                    title={atLimit ? `Trail limit reached (${MAX_TRAIL})` : `Explore: ${concept}`}
-                  >
-                    {alreadyExplored && <span className="mr-1 opacity-60">✓</span>}
-                    {concept}
-                  </button>
+                  <div key={i} className="flex items-center gap-1">
+                    <button
+                      onClick={() => { if (!streaming && !atLimit) explore(concept); }}
+                      disabled={streaming || atLimit}
+                      className="text-xs px-3 py-1.5 rounded-full border transition-all hover:scale-105 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+                      style={{
+                        fontFamily: "var(--font-mono)",
+                        borderColor: alreadyExplored ? "#c8a8e8" : "var(--border)",
+                        backgroundColor: alreadyExplored ? "#f2ecfa" : "var(--bg-card)",
+                        color: alreadyExplored ? "#6a3a9a" : "var(--text-mid)",
+                      }}
+                      title={atLimit ? `Trail limit reached (${MAX_TRAIL})` : `Explore: ${concept}`}
+                    >
+                      {alreadyExplored && <span className="mr-1 opacity-60">✓</span>}
+                      {concept}
+                    </button>
+                    {userId && (
+                      <BookmarkButton
+                        size="sm"
+                        saved={saved}
+                        onToggle={() => toggleBookmark(concept, "related")}
+                      />
+                    )}
+                  </div>
                 );
               })}
             </div>
@@ -223,7 +402,15 @@ export default function RabbitPage() {
 
           {/* Surprising connection */}
           <div className="p-5 border" style={{ borderColor: "#d4a860", backgroundColor: "#faf0e0", borderRadius: "3px" }}>
-            <p className="text-[9px] uppercase tracking-[0.25em] mb-2" style={{ fontFamily: "var(--font-mono)", color: "#8a5a1a" }}>Surprising Connection</p>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[9px] uppercase tracking-[0.25em]" style={{ fontFamily: "var(--font-mono)", color: "#8a5a1a" }}>Surprising Connection</p>
+              {userId && (
+                <BookmarkButton
+                  saved={isBookmarked(current.result.rabbit, "surprising")}
+                  onToggle={() => toggleBookmark(current.result.rabbit, "surprising")}
+                />
+              )}
+            </div>
             <p className="text-sm leading-relaxed" style={{ color: "var(--text)" }}>{current.result.rabbit}</p>
           </div>
         </div>
