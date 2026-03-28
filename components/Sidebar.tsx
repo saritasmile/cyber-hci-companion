@@ -10,7 +10,7 @@ import type { User } from "@supabase/supabase-js";
 const modules: ModuleConfig[] = [
   {
     id: "scenario-intelligence",
-    label: "Scenario Intelligence",
+    label: "Scenarios",
     description: "Analyze real-world cyber incidents through a UX lens",
     href: "/scenarios",
     accent: "analyst",
@@ -106,7 +106,7 @@ function NavLinks({ pathname, onNavClick }: { pathname: string; onNavClick?: () 
                   borderLeftColor: isActive ? SIDEBAR_ACTIVE_BDR : "transparent",
                 }}>
                 <span className="text-base leading-none">{mod.icon}</span>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px" }}>{mod.label}</span>
+                <span style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}>{mod.label}</span>
               </Link>
             </li>
           );
