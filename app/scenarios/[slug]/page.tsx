@@ -10,7 +10,7 @@ import type { ScenarioAnalysis, TimelineEvent, IncidentStage, CIAImpact } from "
 // ── Clark palette ─────────────────────────────────────────────────────────────
 
 const SEVERITY_CONFIG = {
-  critical: { label: "Critical", color: "#7a3828", bg: "#f5ecea", bdr: "#d4aca4" },
+  critical: { label: "Critical", color: "#8a4a38", bg: "#f2ebe8", bdr: "#c8a89c" },
   high:     { label: "High",     color: "#c8924a", bg: "#f5ede0", bdr: "#d8c4a4" },
   medium:   { label: "Medium",   color: "#6b6560", bg: "#e8e5e1", bdr: "#b8b4ac" },
 };
@@ -18,7 +18,7 @@ const SEVERITY_CONFIG = {
 const TAG_CONFIG: Record<string, { color: string; bg: string; bdr: string }> = {
   Analyst:   { color: "#5a7c3a", bg: "#edf4e4", bdr: "#b0cc90" },
   Commander: { color: "#3d7a8a", bg: "#e8f2f5", bdr: "#a8ccd8" },
-  HCI:       { color: "#7a3828", bg: "#f5ecea", bdr: "#d4aca4" },
+  HCI: { color: "var(--clay)", bg: "var(--clay-bg)", bdr: "var(--clay-bdr)" },
 };
 
 // ── Tab definitions — Clark accent colors ─────────────────────────────────────
@@ -33,7 +33,7 @@ const TABS: TabDef[] = [
   { id: "overview",          label: "Overview",          accent: "#c8924a" },  // oak
   { id: "analyst",           label: "Analyst View",      accent: "#5a7c3a" },  // leaf
   { id: "commander",         label: "Commander View",    accent: "#3d7a8a" },  // pool
-  { id: "hci",               label: "HCI / UX",          accent: "#7a3828" },  // clay
+  { id: "hci", label: "HCI / UX", accent: "var(--clay)" }, // new clay which is earthy kelly green
   { id: "design_lessons",    label: "Design Lessons",    accent: "#c8924a" },  // oak
   { id: "incident_timeline", label: "Incident Timeline", accent: "#3d7a8a" },  // pool
 ];
@@ -79,7 +79,7 @@ function Card({ children, style = {} }: { children: React.ReactNode; style?: Rea
 // ── CIA badge ─────────────────────────────────────────────────────────────────
 
 const CIA_CONFIG: Record<CIAImpact, { label: string; color: string; bg: string; bdr: string }> = {
-  availability:    { label: "Availability",    color: "#7a3828", bg: "#f5ecea", bdr: "#d4aca4" },
+  availability: { label: "Availability", color: "var(--clay)", bg: "var(--clay-bg)", bdr: "var(--clay-bdr)" },
   confidentiality: { label: "Confidentiality", color: "#3d7a8a", bg: "#e8f2f5", bdr: "#a8ccd8" },
   integrity:       { label: "Integrity",       color: "#5a7c3a", bg: "#edf4e4", bdr: "#b0cc90" },
 };

@@ -78,9 +78,10 @@ const secondaryModules: ModuleConfig[] = [
   },
 ];
 
-const SIDEBAR_BG          = "#1a1614";
-const SIDEBAR_TEXT        = "rgba(255,255,255,0.55)";
-const SIDEBAR_LABEL       = "rgba(255,255,255,0.3)";
+const SIDEBAR_BG          = "#252220";
+const SIDEBAR_TEXT  = "rgba(255,255,255,0.88)";   // was 0.55 — much more readable
+const SIDEBAR_LABEL = "rgba(255,255,255,0.55)";   // was 0.3
+const SIDEBAR_DIM   = "rgba(255,255,255,0.55)";   // for eyebrows
 const SIDEBAR_BORDER      = "rgba(255,255,255,0.1)";
 const SIDEBAR_ACTIVE_BG   = "rgba(255,255,255,0.1)";
 const SIDEBAR_ACTIVE_TEXT = "#faf8f4";

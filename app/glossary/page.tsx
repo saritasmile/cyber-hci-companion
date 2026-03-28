@@ -116,6 +116,7 @@ function TermRow({
       style={{
         border: `1px solid ${open ? "var(--pool-bdr)" : "var(--border)"}`,
         marginBottom: "6px",
+        background: "var(--bg-card)",
         opacity: gotIt && !open ? 0.45 : 1,
         transition: "opacity 0.15s, border-color 0.15s",
         boxShadow: open ? "0 2px 10px rgba(0,0,0,0.06)" : "none",
@@ -266,21 +267,31 @@ export default function GlossaryPage() {
   const completedCount = gotItIds.size;
   const learningCount = terms.length - completedCount;
 
-  const filterBtnStyle = (f: Filter): React.CSSProperties => ({
+  const filterBtnStyle = (f: Filter): React.CSSProperties => {
+    const active = filter === f;
+    const config = {
+      all:      { color: "var(--text)",  bg: "var(--bg-subtle)", bdr: "var(--border-hi)" },
+      learning: { color: "var(--oak)",   bg: "var(--oak-bg)",    bdr: "var(--oak-bdr)"   },
+      gotit:    { color: "var(--leaf)",  bg: "var(--leaf-bg)",   bdr: "var(--leaf-bdr)"  },
+    }[f];
+  return {
     fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.1em",
-    textTransform: "uppercase", padding: "7px 12px",
-    border: `1px solid ${filter === f ? "var(--border-hi)" : "var(--border)"}`,
-    background: filter === f ? "var(--bg-subtle)" : "transparent",
-    color: filter === f ? "var(--text)" : "var(--text-dim)",
-    cursor: "pointer", transition: "all 0.12s", whiteSpace: "nowrap",
-  });
+    textTransform: "uppercase" as const, padding: "7px 12px",
+    border: `1px solid ${active ? config.bdr : "var(--border)"}`,
+    background: active ? config.bg : "transparent",
+    color: active ? config.color : "var(--text-dim)",
+    cursor: "pointer", transition: "all 0.12s", whiteSpace: "nowrap" as const,
+    };
+  };
 
   return (
     <div style={{ padding: "48px 56px 80px", maxWidth: "860px" }}>
 
       {/* Header */}
       <div style={{ marginBottom: "28px" }}>
-        <p className="eyebrow">Module — Glossary</p>
+        <p style={{ fontFamily: "var(--font-mono)", fontSize: "8px", letterSpacing: "0.28em", textTransform: "uppercase", color: "var(--text-mid)", marginBottom: "10px" }}> 
+          Module — Glossary 
+        </p>
         <h1 style={{ fontSize: "26px", fontWeight: 600, color: "var(--text)", letterSpacing: "-0.02em", marginBottom: "8px" }}>
           Your Glossary
         </h1>
@@ -290,15 +301,21 @@ export default function GlossaryPage() {
       </div>
 
       {/* Stats */}
-      <div style={{ display: "flex", gap: "10px", marginBottom: "24px" }}>
+      <div style={{ display: "flex", flexDirection: "row", gap: "10px", marginBottom: "24px" }}>
         {[
-          { label: "Saved", value: terms.length, color: "var(--pool)" },
-          { label: "Got it", value: completedCount, color: "var(--leaf)" },
-          { label: "Still learning", value: learningCount, color: "var(--oak)" },
+          { label: "Saved",         value: terms.length,    color: "var(--pool)" },
+          { label: "Got it",        value: completedCount,  color: "var(--leaf)" },
+          { label: "Learning",      value: learningCount,  color: "var(--oak)"  },
         ].map(stat => (
-          <div key={stat.label} style={{ background: "var(--bg-card)", border: "1px solid var(--border)", padding: "10px 18px", textAlign: "center" }}>
-            <p style={{ fontFamily: "var(--font-heading)", fontSize: "22px", fontWeight: 700, color: stat.color, marginBottom: "2px" }}>{stat.value}</p>
-            <p style={{ fontFamily: "var(--font-mono)", fontSize: "8px", letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--text-dim)" }}>{stat.label}</p>
+          <div key={stat.label} style={{
+            background: "var(--bg-card)",
+            border: "1px solid var(--border)",
+            padding: "14px 24px",
+            textAlign: "center",
+            minWidth: "90px",
+          }}>
+            <p style={{ fontFamily: "var(--font-body)", fontSize: "26px", fontWeight: 600, color: stat.color, marginBottom: "4px", letterSpacing: "-0.02em" }}>{stat.value}</p>
+            <p style={{ fontFamily: "var(--font-mono)", fontSize: "8px", letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--text-mid)" }}>{stat.label}</p>
           </div>
         ))}
       </div>
@@ -331,8 +348,8 @@ export default function GlossaryPage() {
       {Object.keys(grouped).sort().map(letter => (
         <div key={letter} style={{ marginBottom: "24px" }}>
           <p style={{
-            fontFamily: "var(--font-heading)", fontSize: "22px", fontWeight: 700,
-            color: "var(--border-hi)", marginBottom: "8px", paddingBottom: "6px",
+            fontFamily: "var(--font-body)", fontSize: "22px", fontWeight: 700,
+            color: "var(--text-dim)", marginBottom: "8px", paddingBottom: "6px",
             borderBottom: "1px solid var(--border)",
           }}>
             {letter}

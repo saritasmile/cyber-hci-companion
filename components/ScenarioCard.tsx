@@ -4,16 +4,16 @@ import Link from "next/link";
 import { useState } from "react";
 import type { SeverityLevel, LensTag } from "@/lib/scenarios";
 
-const SEVERITY_CONFIG: Record<SeverityLevel, { label: string; color: string; bg: string; bdr: string }> = {
-  critical: { label: "Critical", color: "#7a3828", bg: "#f5ecea", bdr: "#d4aca4" },
-  high:     { label: "High",     color: "#c8924a", bg: "#f5ede0", bdr: "#d8c4a4" },
-  medium:   { label: "Medium",   color: "#6b6560", bg: "#e8e5e1", bdr: "#b8b4ac" },
+const SEVERITY_CONFIG = {
+  critical: { label: "Critical", color: "#8a4a38", bg: "#f2ebe8", bdr: "#c8a89c" },
+  high:     { label: "High",     color: "var(--oak)",      bg: "var(--oak-bg)",    bdr: "var(--oak-bdr)"  },
+  medium:   { label: "Medium",   color: "var(--text-dim)", bg: "var(--bg-subtle)", bdr: "var(--border)"   },
 };
 
 const LENS_CONFIG: Record<LensTag, { color: string; bg: string; bdr: string }> = {
-  Analyst:   { color: "#5a7c3a", bg: "#edf4e4", bdr: "#b0cc90" },
-  Commander: { color: "#3d7a8a", bg: "#e8f2f5", bdr: "#a8ccd8" },
-  HCI:       { color: "#7a3828", bg: "#f5ecea", bdr: "#d4aca4" },
+  Analyst:   { color: "var(--leaf)",      bg: "var(--leaf-bg)",  bdr: "var(--leaf-bdr)"  },
+  Commander: { color: "var(--pool)",      bg: "var(--pool-bg)",  bdr: "var(--pool-bdr)"  },
+  HCI:       { color: "var(--clay)",      bg: "var(--clay-bg)",  bdr: "var(--clay-bdr)"  },
 };
 
 interface ScenarioCardProps {

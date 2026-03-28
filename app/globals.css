@@ -12,10 +12,10 @@
 
 :root {
   /* ── Concrete surfaces ── */
-  --bg:             #eeece8;   /* poured concrete — slightly deeper than before */
-  --bg-card:        #f8f7f4;   /* lighter cast slab — card surface */
-  --bg-subtle:      #e3e0db;   /* recessed formwork panel */
-  --bg-hover:       #ede3d4;   /* oak-tinted hover surface */
+  --bg:             #eceae6;   /* slightly deeper concrete */
+  --bg-card:        #f6f5f2;   /* cards stay lighter but less washed */
+  --bg-subtle:      #dedad4;   /* recessed panels — more distinct */
+
 
   /* ── Sidebar ── */
   --sidebar-bg:     #1c1a17;   /* board-formed dark concrete */
@@ -26,15 +26,15 @@
   --sidebar-hover:  #252320;   /* hover surface */
 
   /* ── Borders — precision seam lines ── */
-  --border:         #ccc9c2;   /* concrete joint — slightly stronger than before */
-  --border-hi:      #a8a49c;   /* emphasized joint */
+  --border:         #c4c0b8;   /* stronger joint lines */
+  --border-hi:      #9c9890;   /* emphasized joints */
   --border-strong:  #888480;   /* structural seam */
 
   /* ── Text — high contrast, warm ── */
-  --text:           #19170f;   /* near-black, warm */
-  --text-mid:       #38352e;   /* body text */
-  --text-dim:       #6a6560;   /* captions — passes AA */
-  --text-xdim:      #9a9590;   /* ghosted label */
+  --text:           #141210;   /* deeper near-black */
+  --text-mid:       #2c2a24;   /* much darker — was too grey */
+  --text-dim:       #524f48;   /* darker dim — was nearly invisible */
+  --text-xdim:      #7a7670;   /* bumped up too */
 
   /* ── Oak — warm honey wood ── */
   --oak:            #b8822a;   /* richer, more saturated */
@@ -56,10 +56,10 @@
   --leaf-bdr:       #a0be7c;
 
   /* ── Clay — earth, danger, warning ── */
-  --clay:           #72301e;
-  --clay-light:     #8c4030;
-  --clay-bg:        #f2e8e4;
-  --clay-bdr:       #c8a098;
+  --clay:           #5c7a1e;
+  --clay-light:     #6e9224;
+  --clay-bg:        #e8f0d4;
+  --clay-bdr:       #aac478;
 
   /* ── Legacy aliases — keep component code working ── */
   --analyst:        var(--leaf);
@@ -202,6 +202,7 @@ a:hover { color: var(--pool-light); }
   border: 1px solid var(--border);
   border-radius: 0;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);  /* ← add this */
 }
 
 .card:hover {

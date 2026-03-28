@@ -17,10 +17,10 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 // ── Lens config ───────────────────────────────────────────────────────────────
 
-const LENS_CONFIG: Record<FeedLens, { label: string; color: string; bg: string; bdr: string }> = {
-  analyst:   { label: "Analyst",   color: "#0a7a68", bg: "#e8f5f2", bdr: "#b0dbd4" },
-  hci:       { label: "HCI",       color: "#c04a0a", bg: "#fdf0e8", bdr: "#f0c4a0" },
-  commander: { label: "Commander", color: "#1a4e8a", bg: "#e8f0fa", bdr: "#a8c4e8" },
+const LENS_CONFIG = {
+  analyst:   { label: "Analyst",   color: "var(--leaf)",  bg: "var(--leaf-bg)",  bdr: "var(--leaf-bdr)"  },
+  hci:       { label: "HCI",       color: "var(--clay)",  bg: "var(--clay-bg)",  bdr: "var(--clay-bdr)"  },
+  commander: { label: "Commander", color: "var(--pool)",  bg: "var(--pool-bg)",  bdr: "var(--pool-bdr)"  },
 };
 
 const EFFORT_CONFIG: Record<string, { label: string; color: string; bg: string; bdr: string }> = {
@@ -97,11 +97,11 @@ function FeedCard({ item, onGoDeep }: { item: FeedItemRow; onGoDeep: (topic: str
 
 type FilterKey = "all" | FeedLens;
 
-const FILTERS: { key: FilterKey; label: string; color: string; bg: string; bdr: string }[] = [
-  { key: "all",       label: "All",       color: "#8c7d74", bg: "#f2ede6", bdr: "#d8cfc4" },
-  { key: "analyst",   label: "Analyst",   color: "#0a7a68", bg: "#e8f5f2", bdr: "#b0dbd4" },
-  { key: "hci",       label: "HCI",       color: "#c04a0a", bg: "#fdf0e8", bdr: "#f0c4a0" },
-  { key: "commander", label: "Commander", color: "#1a4e8a", bg: "#e8f0fa", bdr: "#a8c4e8" },
+const FILTERS = [
+  { key: "all",       label: "All",       color: "var(--text-dim)", bg: "var(--bg-subtle)", bdr: "var(--border)"    },
+  { key: "analyst",   label: "Analyst",   color: "var(--leaf)",     bg: "var(--leaf-bg)",   bdr: "var(--leaf-bdr)"  },
+  { key: "hci",       label: "HCI",       color: "var(--clay)",     bg: "var(--clay-bg)",   bdr: "var(--clay-bdr)"  },
+  { key: "commander", label: "Commander", color: "var(--pool)",     bg: "var(--pool-bg)",   bdr: "var(--pool-bdr)"  },
 ];
 
 // ── Skeleton loader ───────────────────────────────────────────────────────────

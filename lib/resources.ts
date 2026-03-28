@@ -340,7 +340,7 @@ export const RESOURCE_TYPE_CONFIG: Record<string, { label: string; icon: string;
   course:  { label: "Course",   icon: "◈", color: "#5a7c3a", bg: "#edf4e4", bdr: "#b0cc90" },  // leaf
   book:    { label: "Book",     icon: "◇", color: "#c8924a", bg: "#f5ede0", bdr: "#d8c4a4" },  // oak
   tool:    { label: "Tool",     icon: "⬡", color: "#3d7a8a", bg: "#e8f2f5", bdr: "#a8ccd8" },  // pool
-  youtube: { label: "YouTube",  icon: "▷", color: "#7a3828", bg: "#f5ecea", bdr: "#d4aca4" },  // clay
+  youtube: { label: "YouTube", icon: "▷", color: "var(--clay)", bg: "var(--clay-bg)", bdr: "var(--clay-bdr)" }, // new clay which is kelly green
   reddit:  { label: "Reddit",   icon: "◎", color: "#3d7a8a", bg: "#e8f2f5", bdr: "#a8ccd8" },  // pool
   expert:  { label: "Expert",   icon: "◉", color: "#c8924a", bg: "#f5ede0", bdr: "#d8c4a4" },  // oak
 };
