@@ -14,7 +14,6 @@ function AuthForm() {
 
   const nextPath = searchParams.get("next") ?? "/";
 
-  // If already signed in, set cookie and redirect
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
@@ -27,25 +26,14 @@ function AuthForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!email.trim() || loading) return;
-    setLoading(true);
-    setError(null);
-
+    setLoading(true); setError(null);
     try {
-      const { error: authError } = await supabase.auth.signInWithOtp({
-        email: email.trim(),
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
+      const { error: authError } = await supabase.auth.signInWithOtp({ email: email.trim(), options: { emailRedirectTo: `${window.location.origin}/auth/callback` } });
       if (authError) throw authError;
       setSent(true);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to send magic link. Please try again."
-      );
-    } finally {
-      setLoading(false);
-    }
+      setError(err instanceof Error ? err.message : "Failed to send magic link. Please try again.");
+    } finally { setLoading(false); }
   }
 
   function handleGuest() {
@@ -54,104 +42,71 @@ function AuthForm() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0f0e0d] flex items-center justify-center px-4">
+    <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: "var(--bg)" }}>
       <div className="w-full max-w-sm">
         {/* Wordmark */}
         <div className="mb-8 text-center">
-          <p
-            className="text-[10px] uppercase tracking-[0.3em] text-[#9d9080] mb-2"
-            style={{ fontFamily: "var(--font-mono)" }}
-          >
+          <p className="text-[10px] uppercase tracking-[0.3em] mb-2" style={{ fontFamily: "var(--font-mono)", color: "var(--text-dim)" }}>
             Learning Companion
           </p>
-          <h1
-            className="text-2xl font-bold text-[#e8e0d4]"
-            style={{ fontFamily: "var(--font-heading)" }}
-          >
-            Cyber <span className="text-[#c9a96e]">×</span> HCI
+          <h1 className="text-2xl font-bold" style={{ fontFamily: "var(--font-heading)", color: "var(--text)" }}>
+            Cyber <span style={{ color: "#8a5a1a" }}>×</span> HCI
           </h1>
         </div>
 
         {/* Card */}
-        <div className="bg-[#161412] border border-[#2a2520] rounded-lg p-6">
+        <div className="card p-6">
           {sent ? (
-            /* ── Sent state ── */
             <div className="text-center py-2">
               <div
                 className="w-8 h-8 rounded-full border flex items-center justify-center mx-auto mb-4"
-                style={{ borderColor: "#4eb8a040", backgroundColor: "#4eb8a010" }}
+                style={{ borderColor: "#b0dbd4", backgroundColor: "#e8f5f2" }}
               >
-                <span className="text-[#4eb8a0] text-sm">✓</span>
+                <span className="text-sm" style={{ color: "#0a7a68" }}>✓</span>
               </div>
-              <p
-                className="text-[10px] uppercase tracking-[0.2em] text-[#4eb8a0] mb-3"
-                style={{ fontFamily: "var(--font-mono)" }}
-              >
+              <p className="text-[10px] uppercase tracking-[0.2em] mb-3" style={{ fontFamily: "var(--font-mono)", color: "#0a7a68" }}>
                 Check your inbox
               </p>
-              <p className="text-sm text-[#9d9080] leading-relaxed">
-                We sent a magic link to{" "}
-                <span className="text-[#e8e0d4]">{email}</span>.{" "}
-                Click the link to complete sign-in.
+              <p className="text-sm leading-relaxed" style={{ color: "var(--text-mid)" }}>
+                We sent a magic link to <span style={{ color: "var(--text)" }}>{email}</span>. Click the link to complete sign-in.
               </p>
               <button
                 onClick={() => setSent(false)}
-                className="mt-4 text-[10px] text-[#9d9080] hover:text-[#e8e0d4] transition-colors"
-                style={{ fontFamily: "var(--font-mono)" }}
+                className="mt-4 text-[10px] transition-colors"
+                style={{ fontFamily: "var(--font-mono)", color: "var(--text-dim)" }}
               >
                 Use a different email →
               </button>
             </div>
           ) : (
-            /* ── Sign-in form ── */
             <form onSubmit={handleSubmit} className="space-y-4">
-              <p
-                className="text-[10px] uppercase tracking-[0.2em] text-[#9d9080] mb-2"
-                style={{ fontFamily: "var(--font-mono)" }}
-              >
+              <p className="text-[10px] uppercase tracking-[0.2em] mb-2" style={{ fontFamily: "var(--font-mono)", color: "var(--text-dim)" }}>
                 Sign in to save your progress
               </p>
 
               <div>
-                <label
-                  htmlFor="email"
-                  className="block text-[9px] uppercase tracking-[0.2em] text-[#9d9080] mb-2"
-                  style={{ fontFamily: "var(--font-mono)" }}
-                >
+                <label htmlFor="email" className="block text-[9px] uppercase tracking-[0.2em] mb-2" style={{ fontFamily: "var(--font-mono)", color: "var(--text-dim)" }}>
                   Email address
                 </label>
                 <input
-                  id="email"
-                  type="email"
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  id="email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
-                  className="w-full bg-[#0f0e0d] border border-[#2a2520] rounded-lg px-4 py-3 text-sm text-[#e8e0d4] placeholder-[#4a4540] outline-none focus:border-[#c9a96e] transition-colors"
-                  style={{ fontFamily: "var(--font-body)" }}
+                  className="w-full px-4 py-3 text-sm outline-none transition-all"
+                  style={{ fontFamily: "var(--font-body)", backgroundColor: "var(--bg)", border: "1px solid var(--border)", borderRadius: "2px", color: "var(--text)" }}
+                  onFocus={(e) => { e.target.style.borderColor = "var(--text-mid)"; e.target.style.boxShadow = "0 0 0 3px rgba(26,22,20,0.06)"; }}
+                  onBlur={(e) => { e.target.style.borderColor = "var(--border)"; e.target.style.boxShadow = "none"; }}
                   disabled={loading}
                 />
               </div>
 
               {error && (
-                <p
-                  className="text-xs text-[#e8854a] leading-relaxed"
-                  style={{ fontFamily: "var(--font-mono)" }}
-                >
-                  {error}
-                </p>
+                <p className="text-xs leading-relaxed" style={{ fontFamily: "var(--font-mono)", color: "#c04a0a" }}>{error}</p>
               )}
 
               <button
-                type="submit"
-                disabled={!email.trim() || loading}
-                className="w-full py-3 rounded-lg text-xs tracking-[0.15em] uppercase transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                style={{
-                  fontFamily: "var(--font-mono)",
-                  backgroundColor: "#c9a96e15",
-                  border: "1px solid #c9a96e",
-                  color: "#c9a96e",
-                }}
+                type="submit" disabled={!email.trim() || loading}
+                className="w-full py-3 text-xs tracking-[0.15em] uppercase transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                style={{ fontFamily: "var(--font-mono)", backgroundColor: "#faf0e0", border: "1px solid #d4a860", borderRadius: "2px", color: "#8a5a1a" }}
               >
                 {loading ? "Sending…" : "Send Magic Link →"}
               </button>
@@ -161,23 +116,17 @@ function AuthForm() {
 
         {/* Guest mode */}
         <div className="mt-5 text-center">
-          <p
-            className="text-[10px] text-[#4a4540] mb-2"
-            style={{ fontFamily: "var(--font-mono)" }}
-          >
+          <p className="text-[10px] mb-2" style={{ fontFamily: "var(--font-mono)", color: "var(--text-dim)" }}>
             Don&apos;t want to sign in?
           </p>
           <button
             onClick={handleGuest}
-            className="text-[11px] text-[#9d9080] hover:text-[#e8e0d4] transition-colors border-b border-[#2a2520] hover:border-[#9d9080] pb-0.5"
-            style={{ fontFamily: "var(--font-mono)" }}
+            className="text-[11px] pb-0.5 transition-colors border-b"
+            style={{ fontFamily: "var(--font-mono)", color: "var(--text-mid)", borderColor: "var(--border)" }}
           >
             Continue as guest (exploration only)
           </button>
-          <p
-            className="text-[9px] text-[#4a4540] mt-1.5"
-            style={{ fontFamily: "var(--font-mono)" }}
-          >
+          <p className="text-[9px] mt-1.5" style={{ fontFamily: "var(--font-mono)", color: "var(--text-dim)" }}>
             Knowledge map and saved notes require an account
           </p>
         </div>
@@ -187,9 +136,5 @@ function AuthForm() {
 }
 
 export default function AuthPage() {
-  return (
-    <Suspense>
-      <AuthForm />
-    </Suspense>
-  );
+  return <Suspense><AuthForm /></Suspense>;
 }

@@ -91,6 +91,27 @@ export interface TimelineEvent {
   event: string;
 }
 
+// ── Incident Timeline types ───────────────────────────────────────────────────
+
+export type CIAImpact = "availability" | "confidentiality" | "integrity";
+
+export interface IncidentStage {
+  stage: string;                      // e.g. "Discovery", "Initial Triage"
+  timestamp: string;                  // Relative or absolute time label
+  elapsed: string;                    // Time elapsed since previous stage, e.g. "T+6 hrs"
+  description: string;                // What happened at this stage (non-technical narrative)
+  who_involved: string[];             // Roles / teams / external parties involved
+  how_spread: string;                 // How awareness of the incident expanded at this stage
+  cia_impacts: CIAImpact[];          // Which CIA dimensions became apparent here
+  cia_rationale: string;             // Why those CIA dimensions apply — what was observed
+  key_action: string;                // The pivotal decision or action taken
+}
+
+export interface IncidentTimeline {
+  summary: string;                   // 2–3 sentence high-level narrative of the incident arc
+  stages: IncidentStage[];
+}
+
 export interface ScenarioAnalysis {
   overview: {
     what_happened: string;
@@ -124,4 +145,5 @@ export interface ScenarioAnalysis {
     lessons: string[];
     pattern_connections: string[];
   };
+  incident_timeline: IncidentTimeline;
 }

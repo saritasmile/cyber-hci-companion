@@ -79,10 +79,28 @@ Required structure:
     "pattern_connections": [
       "A security UX pattern or anti-pattern (e.g., 'MFA fatigue', 'alert blindness', 'trust chain transparency') that this incident exemplifies or challenges"
     ]
+  },
+  "incident_timeline": {
+    "summary": "A 2–3 sentence high-level narrative of how this incident unfolded from first signal to resolution — written for someone who wants to understand the human and organizational arc, not the technical details.",
+    "stages": [
+      {
+        "stage": "Stage name — one of: Discovery, Initial Triage, Diagnosis, Escalation & Notification, Containment, Remediation, Post-Incident Review. Use only the stages that actually occurred; add intermediate stages if the incident warrants them.",
+        "timestamp": "When this stage occurred — absolute date or relative label like 'Day 1', 'Week 2', 'T+6 hours'",
+        "elapsed": "Time elapsed since the previous stage, e.g. 'T+0', 'T+4 hours', 'T+3 days'. Use 'T+0' for the first stage.",
+        "description": "2–3 sentence non-technical narrative of what happened at this stage. Focus on the human and organizational story — who noticed what, what decisions were made, what the atmosphere was like.",
+        "who_involved": [
+          "Role or team involved at this stage, e.g. 'NOC engineer', 'CISO', 'FBI Cyber Division', 'Legal counsel', 'Third-party IR firm'"
+        ],
+        "how_spread": "One sentence describing how awareness or impact spread at this stage — internally across teams, to leadership, to external partners, to the public.",
+        "cia_impacts": ["One or more of: availability, confidentiality, integrity — whichever became apparent or were confirmed at this stage"],
+        "cia_rationale": "One sentence explaining what was observed at this stage that indicated each of the listed CIA impacts — e.g. 'Systems were taken offline proactively, causing service outages' or 'Exfiltrated data was confirmed to include PII, establishing a confidentiality breach'.",
+        "key_action": "The single most pivotal decision or action taken at this stage."
+      }
+    ]
   }
 }
 
-Ensure all arrays have 4–6 items. Be specific and evidence-based, not generic. Prioritize insights that are unique to this incident.`;
+Ensure all arrays in overview/analyst/commander/hci/design_lessons have 4–6 items. The incident_timeline.stages array should have 5–8 stages reflecting the actual arc of the incident. Be specific and evidence-based, not generic. Prioritize insights that are unique to this incident.`;
 }
 
 export async function GET(
@@ -106,7 +124,17 @@ export async function GET(
     .single();
 
   if (cached && new Date(cached.expires_at) > new Date()) {
-    return NextResponse.json(cached.analysis);
+    // If cached analysis is missing incident_timeline (generated before this
+    // feature was added), fall through to regenerate rather than returning
+    // an incomplete object.
+    const hasTimeline =
+      cached.analysis &&
+      typeof cached.analysis === "object" &&
+      "incident_timeline" in cached.analysis;
+
+    if (hasTimeline) {
+      return NextResponse.json(cached.analysis);
+    }
   }
 
   // ── Generate analysis via Anthropic ───────────────────────────────────────
@@ -116,7 +144,7 @@ export async function GET(
   try {
     const message = await anthropic.messages.create({
       model: "claude-opus-4-6",
-      max_tokens: 4096,
+      max_tokens: 8192,
       messages: [{ role: "user", content: buildPrompt(scenario) }],
     });
 

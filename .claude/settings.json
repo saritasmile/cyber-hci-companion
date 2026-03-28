@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(npm run:*)",
-      "Bash(ls -la /Users/skbielagus/Projects/cyber-hci-companion/.env*)"
+      "Bash(ls -la /Users/skbielagus/Projects/cyber-hci-companion/.env*)",
+      "Bash(head -1 /Users/skbielagus/Projects/cyber-hci-companion/app/scenarios/[slug]/page.tsx)"
     ]
   }
 }
