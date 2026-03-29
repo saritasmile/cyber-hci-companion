@@ -78,20 +78,24 @@ const secondaryModules: ModuleConfig[] = [
   },
 ];
 
-const SIDEBAR_BG          = "#252220";
-const SIDEBAR_TEXT  = "rgba(255,255,255,0.88)";   // was 0.55 — much more readable
-const SIDEBAR_LABEL = "rgba(255,255,255,0.55)";   // was 0.3
-const SIDEBAR_DIM   = "rgba(255,255,255,0.55)";   // for eyebrows
-const SIDEBAR_BORDER      = "rgba(255,255,255,0.1)";
-const SIDEBAR_ACTIVE_BG   = "rgba(255,255,255,0.1)";
-const SIDEBAR_ACTIVE_TEXT = "#faf8f4";
-const SIDEBAR_ACTIVE_BDR  = "#d4a860";
+// ── All sidebar colors now driven by CSS variables in globals.css ──────────────
+// To change the sidebar palette, edit --sidebar-* tokens in globals.css only.
+const S = {
+  bg:          "var(--sidebar-bg)",
+  text:        "var(--sidebar-text)",
+  label:       "var(--sidebar-dim)",
+  border:      "var(--sidebar-bdr)",
+  activeBg:    "var(--sidebar-hover)",
+  activeText:  "var(--sidebar-active)",
+  activeBdr:   "var(--oak)",          // active left-border accent = oak/honey
+  accent:      "var(--oak)",          // × logo accent, secondary icon dots
+};
 
 function NavLinks({ pathname, onNavClick }: { pathname: string; onNavClick?: () => void }) {
   return (
     <>
       <p className="px-3 mb-2 text-[10px] uppercase tracking-[0.2em]"
-        style={{ fontFamily: "var(--font-mono)", color: SIDEBAR_LABEL }}>
+        style={{ fontFamily: "var(--font-mono)", color: S.label }}>
         Modules
       </p>
       <ul className="space-y-0.5">
@@ -102,9 +106,9 @@ function NavLinks({ pathname, onNavClick }: { pathname: string; onNavClick?: () 
               <Link href={mod.href} onClick={onNavClick}
                 className="flex items-center gap-3 px-3 py-2.5 rounded text-sm transition-colors border-l-2 pl-[10px]"
                 style={{
-                  color: isActive ? SIDEBAR_ACTIVE_TEXT : SIDEBAR_TEXT,
-                  backgroundColor: isActive ? SIDEBAR_ACTIVE_BG : "transparent",
-                  borderLeftColor: isActive ? SIDEBAR_ACTIVE_BDR : "transparent",
+                  color: isActive ? S.activeText : S.text,
+                  backgroundColor: isActive ? S.activeBg : "transparent",
+                  borderLeftColor: isActive ? S.activeBdr : "transparent",
                 }}>
                 <span className="text-base leading-none">{mod.icon}</span>
                 <span style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}>{mod.label}</span>
@@ -115,18 +119,18 @@ function NavLinks({ pathname, onNavClick }: { pathname: string; onNavClick?: () 
       </ul>
 
       {/* Glossary + Knowledge Map */}
-      <div className="mt-4 pt-4 px-3" style={{ borderTop: `1px solid ${SIDEBAR_BORDER}` }}>
+      <div className="mt-4 pt-4 px-3" style={{ borderTop: `1px solid ${S.border}` }}>
         {secondaryModules.map((mod) => {
           const isActive = pathname.startsWith(mod.href);
           return (
             <Link key={mod.id} href={mod.href} onClick={onNavClick}
               className="flex items-center gap-3 px-3 py-2.5 rounded text-sm transition-colors border-l-2 pl-[10px]"
               style={{
-                color: isActive ? SIDEBAR_ACTIVE_TEXT : SIDEBAR_TEXT,
-                backgroundColor: isActive ? SIDEBAR_ACTIVE_BG : "transparent",
-                borderLeftColor: isActive ? SIDEBAR_ACTIVE_BDR : "transparent",
+                color: isActive ? S.activeText : S.text,
+                backgroundColor: isActive ? S.activeBg : "transparent",
+                borderLeftColor: isActive ? S.activeBdr : "transparent",
               }}>
-              <span className="text-base leading-none" style={{ color: "#d4a860" }}>{mod.icon}</span>
+              <span className="text-base leading-none" style={{ color: S.accent }}>{mod.icon}</span>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px" }}>{mod.label}</span>
             </Link>
           );
@@ -143,29 +147,34 @@ function SidebarFooter({ user, displayEmail, avatarLetter, onSignOut }: {
   onSignOut: () => void;
 }) {
   return (
-    <div className="px-4 py-4" style={{ borderTop: `1px solid ${SIDEBAR_BORDER}` }}>
+    <div className="px-4 py-4" style={{ borderTop: `1px solid ${S.border}` }}>
       {user ? (
         <div className="flex items-center gap-3">
           <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-[11px] font-bold"
-            style={{ backgroundColor: "rgba(212,168,96,0.15)", border: "1px solid rgba(212,168,96,0.3)", color: "#d4a860", fontFamily: "var(--font-mono)" }}>
+            style={{
+              backgroundColor: "var(--oak-bg)",
+              border: "1px solid var(--oak-bdr)",
+              color: "var(--oak)",
+              fontFamily: "var(--font-mono)",
+            }}>
             {avatarLetter}
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-[10px] truncate"
-              style={{ fontFamily: "var(--font-mono)", color: SIDEBAR_ACTIVE_TEXT }}>
+              style={{ fontFamily: "var(--font-mono)", color: S.activeText }}>
               {displayEmail}
             </p>
           </div>
           <button onClick={onSignOut} title="Sign out" className="shrink-0 transition-colors"
-            style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: SIDEBAR_LABEL }}>
+            style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: S.label }}>
             ↪
           </button>
         </div>
       ) : (
         <div className="flex items-center justify-between">
-          <p className="text-[10px]" style={{ fontFamily: "var(--font-mono)", color: SIDEBAR_LABEL }}>Guest mode</p>
+          <p className="text-[10px]" style={{ fontFamily: "var(--font-mono)", color: S.label }}>Guest mode</p>
           <Link href="/auth" className="text-[10px] transition-colors"
-            style={{ fontFamily: "var(--font-mono)", color: "#d4a860" }}>
+            style={{ fontFamily: "var(--font-mono)", color: S.accent }}>
             Sign in →
           </Link>
         </div>
@@ -204,14 +213,14 @@ export default function Sidebar() {
 
   const logoBlock = (
     <Link href="/" className="block px-6 py-6 transition-opacity hover:opacity-80"
-      style={{ borderBottom: `1px solid ${SIDEBAR_BORDER}` }}>
+      style={{ borderBottom: `1px solid ${S.border}` }}>
       <p className="text-[10px] uppercase tracking-[0.25em] mb-1"
-        style={{ fontFamily: "var(--font-mono)", color: SIDEBAR_LABEL }}>
+        style={{ fontFamily: "var(--font-mono)", color: S.label }}>
         Learning Companion
       </p>
       <h1 className="text-lg font-bold leading-tight"
-        style={{ fontFamily: "var(--font-heading)", color: SIDEBAR_ACTIVE_TEXT }}>
-        Cyber <span style={{ color: "#d4a860" }}>×</span> HCI
+        style={{ fontFamily: "var(--font-heading)", color: S.activeText }}>
+        Cyber <span style={{ color: S.accent }}>×</span> HCI
       </h1>
     </Link>
   );
@@ -220,23 +229,23 @@ export default function Sidebar() {
     <>
       {/* Mobile header */}
       <header className="md:hidden sticky top-0 z-[200] flex items-center justify-between px-5"
-        style={{ height: "56px", backgroundColor: SIDEBAR_BG }}>
+        style={{ height: "56px", backgroundColor: S.bg }}>
         <Link href="/" className="transition-opacity hover:opacity-80">
           <h1 className="text-base font-bold"
-            style={{ fontFamily: "var(--font-heading)", color: SIDEBAR_ACTIVE_TEXT }}>
-            Cyber <span style={{ color: "#d4a860" }}>×</span> HCI
+            style={{ fontFamily: "var(--font-heading)", color: S.activeText }}>
+            Cyber <span style={{ color: S.accent }}>×</span> HCI
           </h1>
         </Link>
         <button onClick={() => setDrawerOpen(true)} aria-label="Open menu" className="flex flex-col gap-1.5 p-1">
-          <span className="block w-5 h-px" style={{ backgroundColor: SIDEBAR_ACTIVE_TEXT }} />
-          <span className="block w-5 h-px" style={{ backgroundColor: SIDEBAR_ACTIVE_TEXT }} />
-          <span className="block w-4 h-px" style={{ backgroundColor: SIDEBAR_ACTIVE_TEXT }} />
+          <span className="block w-5 h-px" style={{ backgroundColor: S.activeText }} />
+          <span className="block w-5 h-px" style={{ backgroundColor: S.activeText }} />
+          <span className="block w-4 h-px" style={{ backgroundColor: S.activeText }} />
         </button>
       </header>
 
       {/* Desktop sidebar */}
       <aside className="hidden md:flex w-64 shrink-0 h-screen sticky top-0 flex-col"
-        style={{ backgroundColor: SIDEBAR_BG, borderRight: `1px solid ${SIDEBAR_BORDER}` }}>
+        style={{ backgroundColor: S.bg, borderRight: `1px solid ${S.border}` }}>
         {logoBlock}
         <nav className="flex-1 overflow-y-auto py-4 px-3">
           <NavLinks pathname={pathname} />
@@ -250,17 +259,17 @@ export default function Sidebar() {
           <div className="absolute inset-0" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
             onClick={() => setDrawerOpen(false)} />
           <aside className="absolute left-0 top-0 bottom-0 w-64 flex flex-col overflow-y-auto"
-            style={{ backgroundColor: SIDEBAR_BG }}>
+            style={{ backgroundColor: S.bg }}>
             <div className="flex items-center justify-between px-6 py-5"
-              style={{ borderBottom: `1px solid ${SIDEBAR_BORDER}` }}>
+              style={{ borderBottom: `1px solid ${S.border}` }}>
               <Link href="/" onClick={() => setDrawerOpen(false)} className="transition-opacity hover:opacity-80">
                 <h1 className="text-base font-bold"
-                  style={{ fontFamily: "var(--font-heading)", color: SIDEBAR_ACTIVE_TEXT }}>
-                  Cyber <span style={{ color: "#d4a860" }}>×</span> HCI
+                  style={{ fontFamily: "var(--font-heading)", color: S.activeText }}>
+                  Cyber <span style={{ color: S.accent }}>×</span> HCI
                 </h1>
               </Link>
               <button onClick={() => setDrawerOpen(false)} aria-label="Close menu" className="text-lg"
-                style={{ color: SIDEBAR_LABEL }}>✕</button>
+                style={{ color: S.label }}>✕</button>
             </div>
             <nav className="flex-1 py-4 px-3">
               <NavLinks pathname={pathname} onNavClick={() => setDrawerOpen(false)} />

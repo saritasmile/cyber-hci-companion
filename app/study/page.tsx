@@ -4,15 +4,11 @@ import { useState, useRef, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
 interface StudyAnalyst { summary: string; concepts: string[]; tools: string[]; }
 interface StudyHCI { summary: string; challenges: string[]; design_questions: string[]; }
 interface StudyResult { analyst: StudyAnalyst; hci: StudyHCI; reflect: string[]; }
 type DepthKey = "overview" | "working_knowledge" | "deep_dive";
 type TabKey = "analyst" | "hci" | "reflect";
-
-// ── UI Primitives ─────────────────────────────────────────────────────────────
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -26,7 +22,7 @@ function BulletList({ items, accent }: { items: string[]; accent: string }) {
   return (
     <ul className="space-y-2">
       {items.map((item, i) => (
-        <li key={i} className="flex gap-3 text-sm leading-relaxed" style={{ color: "var(--text)" }}>
+        <li key={i} className="flex gap-3 leading-relaxed" style={{ fontFamily: "var(--font-body)", fontSize: "13px", color: "var(--text)" }}>
           <span className="mt-1.5 shrink-0 w-1 h-1 rounded-full" style={{ backgroundColor: accent }} />
           <span>{item}</span>
         </li>
@@ -39,8 +35,6 @@ function Card({ children, className = "" }: { children: React.ReactNode; classNa
   return <div className={`card p-5 ${className}`}>{children}</div>;
 }
 
-// ── Streaming indicator ───────────────────────────────────────────────────────
-
 function StreamingIndicator({ accent }: { accent: string }) {
   return (
     <div className="space-y-4">
@@ -50,9 +44,7 @@ function StreamingIndicator({ accent }: { accent: string }) {
             <span key={i} className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ backgroundColor: accent, animationDelay: `${i * 0.15}s` }} />
           ))}
         </span>
-        <span className="text-[10px] uppercase tracking-[0.2em]" style={{ fontFamily: "var(--font-mono)", color: "var(--text-dim)" }}>
-          Generating…
-        </span>
+        <span className="text-[10px] uppercase tracking-[0.2em]" style={{ fontFamily: "var(--font-mono)", color: "var(--text-dim)" }}>Generating…</span>
       </div>
       <div className="animate-pulse space-y-4">
         {[1, 2].map((i) => (
@@ -70,15 +62,18 @@ function StreamingIndicator({ accent }: { accent: string }) {
   );
 }
 
-// ── Depth options ─────────────────────────────────────────────────────────────
-
 const DEPTH_OPTIONS: { value: DepthKey; label: string; description: string }[] = [
   { value: "overview",          label: "Overview",          description: "High-level concepts and context" },
   { value: "working_knowledge", label: "Working Knowledge", description: "Practitioner-level understanding" },
   { value: "deep_dive",         label: "Deep Dive",         description: "Expert depth with technical nuance" },
 ];
 
-// ── Main page ─────────────────────────────────────────────────────────────────
+// ── Tab config — all CSS variables ────────────────────────────────────────────
+const TABS: { id: TabKey; label: string; accent: string }[] = [
+  { id: "analyst", label: "Analyst View",  accent: "var(--leaf)" },
+  { id: "hci",     label: "HCI / UX View", accent: "var(--clay)" },
+  { id: "reflect", label: "Reflect",       accent: "var(--oak)"  },
+];
 
 function StudyPageInner() {
   const searchParams = useSearchParams();
@@ -142,24 +137,18 @@ function StudyPageInner() {
     } catch (err) { console.error("[study] Save failed:", err); } finally { setSaving(false); }
   }
 
-  const TABS: { id: TabKey; label: string; accent: string }[] = [
-    { id: "analyst", label: "Analyst View",  accent: "#0a7a68" },
-    { id: "hci",     label: "HCI / UX View", accent: "#c04a0a" },
-    { id: "reflect", label: "Reflect",        accent: "#6a3a9a" },
-  ];
+  const activeAccent = TABS.find(t => t.id === activeTab)?.accent ?? "var(--leaf)";
 
   return (
     <div className="px-10 py-10 max-w-5xl responsive-padding">
-      {/* Header */}
       <div className="mb-8">
         <p className="text-[10px] uppercase tracking-[0.25em] mb-1" style={{ fontFamily: "var(--font-mono)", color: "var(--text-dim)" }}>Module</p>
-        <h1 className="page-title mb-2" style={{ fontFamily: "var(--font-heading)" }}>Guided Study</h1>
-        <p className="text-sm max-w-xl leading-relaxed" style={{ color: "var(--text-mid)" }}>
+        <h1 className="page-title mb-2" style={{ fontFamily: "var(--font-body)" }}>Guided Study</h1>
+        <p className="max-w-xl" style={{ fontFamily: "var(--font-body)", fontSize: "14px", color: "var(--text-mid)", lineHeight: 1.7 }}>
           Enter a cybersecurity or HCI topic. Choose a depth level, then explore the analyst and UX perspectives side by side.
         </p>
       </div>
 
-      {/* Form */}
       <form onSubmit={handleSubmit} className="mb-8">
         <div className="flex flex-col gap-4">
           <div>
@@ -167,9 +156,9 @@ function StudyPageInner() {
             <input
               id="topic" type="text" value={topic} onChange={(e) => setTopic(e.target.value)}
               placeholder="e.g. Phishing-resistant MFA, Zero Trust Architecture, Alert Fatigue…"
-              className="w-full px-4 py-3 text-sm outline-none transition-all"
-              style={{ fontFamily: "var(--font-body)", backgroundColor: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "2px", color: "var(--text)" }}
-              onFocus={(e) => { e.target.style.borderColor = "var(--text-mid)"; e.target.style.boxShadow = "0 0 0 3px rgba(26,22,20,0.06)"; }}
+              className="w-full px-4 py-3 outline-none transition-all"
+              style={{ fontFamily: "var(--font-body)", fontSize: "14px", backgroundColor: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "2px", color: "var(--text)" }}
+              onFocus={(e) => { e.target.style.borderColor = "var(--border-strong)"; e.target.style.boxShadow = "0 0 0 3px rgba(26,22,20,0.06)"; }}
               onBlur={(e) => { e.target.style.borderColor = "var(--border)"; e.target.style.boxShadow = "none"; }}
               disabled={streaming}
             />
@@ -181,11 +170,10 @@ function StudyPageInner() {
                 const isSelected = depth === opt.value;
                 return (
                   <button key={opt.value} type="button" onClick={() => setDepth(opt.value)}
-                    className="px-4 py-2 border text-xs transition-colors text-left"
-                    style={{ fontFamily: "var(--font-mono)", borderRadius: "2px", borderColor: isSelected ? "#0a7a68" : "var(--border)", backgroundColor: isSelected ? "#e8f5f2" : "var(--bg-card)", color: isSelected ? "#0a7a68" : "var(--text-mid)" }}
-                    disabled={streaming}
-                  >
-                    <span className="block font-semibold">{opt.label}</span>
+                    className="px-4 py-2 border transition-colors text-left"
+                    style={{ fontFamily: "var(--font-mono)", fontSize: "12px", borderRadius: "2px", borderColor: isSelected ? "var(--leaf-bdr)" : "var(--border)", backgroundColor: isSelected ? "var(--leaf-bg)" : "var(--bg-card)", color: isSelected ? "var(--leaf)" : "var(--text-mid)" }}
+                    disabled={streaming}>
+                    <span className="block font-medium">{opt.label}</span>
                     <span className="block text-[10px] opacity-70 mt-0.5">{opt.description}</span>
                   </button>
                 );
@@ -194,9 +182,8 @@ function StudyPageInner() {
           </div>
           <div>
             <button type="submit" disabled={!topic.trim() || streaming}
-              className="px-6 py-2.5 text-xs tracking-[0.15em] uppercase transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-              style={{ fontFamily: "var(--font-mono)", backgroundColor: "#e8f5f2", border: "1px solid #b0dbd4", borderRadius: "2px", color: "#0a7a68" }}
-            >
+              className="px-6 py-2.5 uppercase tracking-[0.15em] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{ fontFamily: "var(--font-mono)", fontSize: "9px", backgroundColor: "var(--leaf-bg)", border: "1px solid var(--leaf-bdr)", borderRadius: "2px", color: "var(--leaf)" }}>
               {streaming ? "Generating…" : "Study →"}
             </button>
           </div>
@@ -204,25 +191,23 @@ function StudyPageInner() {
       </form>
 
       {error && (
-        <div className="card p-5 mb-6" style={{ borderColor: "#f0c4a0" }}>
-          <p className="text-[10px] uppercase tracking-[0.2em] mb-1" style={{ fontFamily: "var(--font-mono)", color: "#c04a0a" }}>Error</p>
-          <p className="text-sm" style={{ color: "var(--text-mid)" }}>{error}</p>
+        <div className="card p-5 mb-6" style={{ borderColor: "var(--clay-bdr)" }}>
+          <p className="text-[10px] uppercase tracking-[0.2em] mb-1" style={{ fontFamily: "var(--font-mono)", color: "var(--clay)" }}>Error</p>
+          <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", color: "var(--text-mid)" }}>{error}</p>
         </div>
       )}
 
-      {streaming && <StreamingIndicator accent="#0a7a68" />}
+      {streaming && <StreamingIndicator accent={activeAccent} />}
 
       {result && !streaming && (
         <div>
-          {/* Tab bar */}
           <div className="flex gap-0 mb-6" style={{ borderBottom: "2px solid var(--border)", overflowX: "auto", scrollbarWidth: "none" } as React.CSSProperties}>
             {TABS.map((tab) => {
               const isActive = activeTab === tab.id;
               return (
                 <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                  className="relative shrink-0 px-4 py-3 text-[11px] tracking-[0.12em] uppercase transition-colors"
-                  style={{ fontFamily: "var(--font-mono)", color: isActive ? tab.accent : "var(--text-dim)", borderBottom: isActive ? `3px solid ${tab.accent}` : "3px solid transparent", marginBottom: "-2px", backgroundColor: "transparent" }}
-                >
+                  className="relative shrink-0 px-4 py-3 uppercase tracking-[0.12em] transition-colors"
+                  style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: isActive ? tab.accent : "var(--text-dim)", borderBottom: isActive ? `3px solid ${tab.accent}` : "3px solid transparent", marginBottom: "-2px", backgroundColor: "transparent" }}>
                   {isActive && <span className="absolute inset-0 rounded-t" style={{ backgroundColor: tab.accent + "12" }} />}
                   {tab.label}
                 </button>
@@ -232,37 +217,37 @@ function StudyPageInner() {
 
           {activeTab === "analyst" && (
             <div className="space-y-5">
-              <Card><SectionLabel>Summary</SectionLabel><p className="text-sm leading-relaxed" style={{ color: "var(--text)" }}>{result.analyst.summary}</p></Card>
+              <Card><SectionLabel>Summary</SectionLabel><p style={{ fontFamily: "var(--font-body)", fontSize: "13px", color: "var(--text)", lineHeight: 1.7 }}>{result.analyst.summary}</p></Card>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Card><SectionLabel>Key Concepts</SectionLabel><BulletList items={result.analyst.concepts} accent="#0a7a68" /></Card>
-                <Card><SectionLabel>Tools & Resources</SectionLabel><BulletList items={result.analyst.tools} accent="#0a7a68" /></Card>
+                <Card><SectionLabel>Key Concepts</SectionLabel><BulletList items={result.analyst.concepts} accent="var(--leaf)" /></Card>
+                <Card><SectionLabel>Tools & Resources</SectionLabel><BulletList items={result.analyst.tools} accent="var(--leaf)" /></Card>
               </div>
             </div>
           )}
 
           {activeTab === "hci" && (
             <div className="space-y-5">
-              <Card><SectionLabel>Human Factors Summary</SectionLabel><p className="text-sm leading-relaxed" style={{ color: "var(--text)" }}>{result.hci.summary}</p></Card>
+              <Card><SectionLabel>Human Factors Summary</SectionLabel><p style={{ fontFamily: "var(--font-body)", fontSize: "13px", color: "var(--text)", lineHeight: 1.7 }}>{result.hci.summary}</p></Card>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Card><SectionLabel>Human & Cognitive Challenges</SectionLabel><BulletList items={result.hci.challenges} accent="#c04a0a" /></Card>
-                <Card><SectionLabel>Design Questions</SectionLabel><BulletList items={result.hci.design_questions} accent="#c04a0a" /></Card>
+                <Card><SectionLabel>Human & Cognitive Challenges</SectionLabel><BulletList items={result.hci.challenges} accent="var(--clay)" /></Card>
+                <Card><SectionLabel>Design Questions</SectionLabel><BulletList items={result.hci.design_questions} accent="var(--clay)" /></Card>
               </div>
             </div>
           )}
 
           {activeTab === "reflect" && (
             <div className="space-y-4">
-              <p className="text-sm leading-relaxed mb-2" style={{ color: "var(--text-mid)" }}>
+              <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", color: "var(--text-mid)", lineHeight: 1.7, marginBottom: "8px" }}>
                 Deepen your understanding by reflecting on these questions. Your answers are saved with the session.
               </p>
               {result.reflect.map((question, i) => (
                 <Card key={i}>
-                  <p className="text-sm leading-relaxed mb-3" style={{ color: "var(--text)" }}>{question}</p>
+                  <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", color: "var(--text)", lineHeight: 1.7, marginBottom: "12px" }}>{question}</p>
                   <textarea rows={3} value={reflections[i] ?? ""} onChange={(e) => setReflections((prev) => ({ ...prev, [i]: e.target.value }))}
                     placeholder="Your thoughts…"
-                    className="w-full px-3 py-2 text-sm outline-none transition-colors resize-none"
-                    style={{ fontFamily: "var(--font-body)", backgroundColor: "var(--bg)", border: "1px solid var(--border)", borderRadius: "2px", color: "var(--text)" }}
-                    onFocus={(e) => { e.target.style.borderColor = "#c8a8e8"; }}
+                    className="w-full px-3 py-2 outline-none transition-colors resize-none"
+                    style={{ fontFamily: "var(--font-body)", fontSize: "13px", backgroundColor: "var(--bg)", border: "1px solid var(--border)", borderRadius: "2px", color: "var(--text)" }}
+                    onFocus={(e) => { e.target.style.borderColor = "var(--oak-bdr-hi)"; }}
                     onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
                   />
                 </Card>
@@ -272,13 +257,12 @@ function StudyPageInner() {
 
           <div className="mt-8 pt-6 flex items-center gap-4" style={{ borderTop: "1px solid var(--border)" }}>
             <button onClick={handleSave} disabled={saving || saved}
-              className="px-5 py-2 text-xs tracking-[0.15em] uppercase transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-              style={{ fontFamily: "var(--font-mono)", backgroundColor: saved ? "#e8f5f2" : "var(--bg-card)", border: `1px solid ${saved ? "#b0dbd4" : "var(--border)"}`, borderRadius: "2px", color: saved ? "#0a7a68" : "var(--text-mid)" }}
-            >
+              className="px-5 py-2 uppercase tracking-[0.15em] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{ fontFamily: "var(--font-mono)", fontSize: "9px", backgroundColor: saved ? "var(--leaf-bg)" : "var(--bg-card)", border: `1px solid ${saved ? "var(--leaf-bdr)" : "var(--border)"}`, borderRadius: "2px", color: saved ? "var(--leaf)" : "var(--text-mid)" }}>
               {saving ? "Saving…" : saved ? "Session Saved ✓" : "Save Session"}
             </button>
-            <span className="text-[10px]" style={{ fontFamily: "var(--font-mono)", color: "var(--text-dim)" }}>
-              {saved ? "Saved to your notes" : "Save this session with your reflections to your notes"}
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--text-dim)" }}>
+              {saved ? "Saved to your notes" : "Save this session with your reflections"}
             </span>
           </div>
         </div>

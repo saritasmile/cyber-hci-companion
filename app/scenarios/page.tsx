@@ -15,12 +15,16 @@ export default function ScenariosPage() {
           Module 01 — Scenarios
         </p>
         <h1 style={{
-          fontSize: "26px", fontWeight: 600, color: "var(--text)",
+          fontFamily: "var(--font-body)",
+          fontSize: "26px", fontWeight: 500, color: "var(--text)",
           letterSpacing: "-0.02em", marginBottom: "10px",
         }}>
           Scenarios
         </h1>
-        <p style={{ fontSize: "14px", color: "var(--text-mid)", lineHeight: 1.65, maxWidth: "480px" }}>
+        <p style={{
+          fontFamily: "var(--font-body)",
+          fontSize: "14px", color: "var(--text-mid)", lineHeight: 1.7, maxWidth: "480px",
+        }}>
           Six landmark cyber incidents analysed through the Analyst, Commander,
           and HCI/UX lenses. Select a scenario to generate a full AI-powered breakdown.
         </p>

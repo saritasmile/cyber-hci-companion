@@ -7,46 +7,45 @@ import { scenarios } from "@/lib/scenarios";
 import { supabase } from "@/lib/supabase";
 import type { ScenarioAnalysis, TimelineEvent, IncidentStage, CIAImpact } from "@/lib/scenarios";
 
-// ── Clark palette ─────────────────────────────────────────────────────────────
+// ── Color config — all CSS variables ─────────────────────────────────────────
 
 const SEVERITY_CONFIG = {
-  critical: { label: "Critical", color: "#8a4a38", bg: "#f2ebe8", bdr: "#c8a89c" },
-  high:     { label: "High",     color: "#c8924a", bg: "#f5ede0", bdr: "#d8c4a4" },
-  medium:   { label: "Medium",   color: "#6b6560", bg: "#e8e5e1", bdr: "#b8b4ac" },
+  critical: { label: "Critical", color: "var(--clay)",     bg: "var(--clay-bg)",   bdr: "var(--clay-bdr)"  },
+  high:     { label: "High",     color: "var(--oak)",      bg: "var(--oak-bg)",    bdr: "var(--oak-bdr)"   },
+  medium:   { label: "Medium",   color: "var(--text-dim)", bg: "var(--bg-subtle)", bdr: "var(--border)"    },
 };
 
 const TAG_CONFIG: Record<string, { color: string; bg: string; bdr: string }> = {
-  Analyst:   { color: "#5a7c3a", bg: "#edf4e4", bdr: "#b0cc90" },
-  Commander: { color: "#3d7a8a", bg: "#e8f2f5", bdr: "#a8ccd8" },
-  HCI: { color: "var(--clay)", bg: "var(--clay-bg)", bdr: "var(--clay-bdr)" },
+  Analyst:   { color: "var(--leaf)", bg: "var(--leaf-bg)", bdr: "var(--leaf-bdr)" },
+  Commander: { color: "var(--pool)", bg: "var(--pool-bg)", bdr: "var(--pool-bdr)" },
+  HCI:       { color: "var(--clay)", bg: "var(--clay-bg)", bdr: "var(--clay-bdr)" },
 };
 
-// ── Tab definitions — Clark accent colors ─────────────────────────────────────
-
-interface TabDef {
-  id: keyof ScenarioAnalysis;
-  label: string;
-  accent: string;
-}
+interface TabDef { id: keyof ScenarioAnalysis; label: string; accent: string; }
 
 const TABS: TabDef[] = [
-  { id: "overview",          label: "Overview",          accent: "#c8924a" },  // oak
-  { id: "analyst",           label: "Analyst View",      accent: "#5a7c3a" },  // leaf
-  { id: "commander",         label: "Commander View",    accent: "#3d7a8a" },  // pool
-  { id: "hci", label: "HCI / UX", accent: "var(--clay)" }, // new clay which is earthy kelly green
-  { id: "design_lessons",    label: "Design Lessons",    accent: "#c8924a" },  // oak
-  { id: "incident_timeline", label: "Incident Timeline", accent: "#3d7a8a" },  // pool
+  { id: "overview",          label: "Overview",          accent: "var(--oak)"  },
+  { id: "analyst",           label: "Analyst View",      accent: "var(--leaf)" },
+  { id: "commander",         label: "Commander View",    accent: "var(--pool)" },
+  { id: "hci",               label: "HCI / UX",          accent: "var(--clay)" },
+  { id: "design_lessons",    label: "Design Lessons",    accent: "var(--oak)"  },
+  { id: "incident_timeline", label: "Incident Timeline", accent: "var(--pool)" },
 ];
+
+// ── CIA config — CSS variables ────────────────────────────────────────────────
+// Note: SVG fill attributes need hex values, but these are used in HTML divs so variables work.
+
+const CIA_CONFIG: Record<CIAImpact, { label: string; color: string; bg: string; bdr: string }> = {
+  availability:    { label: "Availability",    color: "var(--clay)", bg: "var(--clay-bg)", bdr: "var(--clay-bdr)" },
+  confidentiality: { label: "Confidentiality", color: "var(--pool)", bg: "var(--pool-bg)", bdr: "var(--pool-bdr)" },
+  integrity:       { label: "Integrity",       color: "var(--leaf)", bg: "var(--leaf-bg)", bdr: "var(--leaf-bdr)" },
+};
 
 // ── UI primitives ─────────────────────────────────────────────────────────────
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p style={{
-      fontFamily: "var(--font-mono)", fontSize: "8px",
-      letterSpacing: "0.22em", textTransform: "uppercase",
-      color: "var(--text-dim)", marginBottom: "8px",
-    }}>
+    <p style={{ fontFamily: "var(--font-mono)", fontSize: "8px", letterSpacing: "0.22em", textTransform: "uppercase", color: "var(--text-dim)", marginBottom: "8px" }}>
       {children}
     </p>
   );
@@ -56,7 +55,7 @@ function BulletList({ items, accent }: { items: string[]; accent: string }) {
   return (
     <ul style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
       {items.map((item, i) => (
-        <li key={i} style={{ display: "flex", gap: "12px", fontSize: "13px", lineHeight: 1.7, color: "var(--text-mid)" }}>
+        <li key={i} style={{ display: "flex", gap: "12px", fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.7, color: "var(--text)" }}>
           <span style={{ marginTop: "7px", flexShrink: 0, width: "4px", height: "4px", background: accent }} />
           <span>{item}</span>
         </li>
@@ -66,32 +65,13 @@ function BulletList({ items, accent }: { items: string[]; accent: string }) {
 }
 
 function Card({ children, style = {} }: { children: React.ReactNode; style?: React.CSSProperties }) {
-  return (
-    <div style={{
-      background: "var(--bg-card)", border: "1px solid var(--border)",
-      padding: "18px 20px", ...style,
-    }}>
-      {children}
-    </div>
-  );
+  return <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", padding: "18px 20px", ...style }}>{children}</div>;
 }
-
-// ── CIA badge ─────────────────────────────────────────────────────────────────
-
-const CIA_CONFIG: Record<CIAImpact, { label: string; color: string; bg: string; bdr: string }> = {
-  availability: { label: "Availability", color: "var(--clay)", bg: "var(--clay-bg)", bdr: "var(--clay-bdr)" },
-  confidentiality: { label: "Confidentiality", color: "#3d7a8a", bg: "#e8f2f5", bdr: "#a8ccd8" },
-  integrity:       { label: "Integrity",       color: "#5a7c3a", bg: "#edf4e4", bdr: "#b0cc90" },
-};
 
 function CIABadge({ impact }: { impact: CIAImpact }) {
   const cfg = CIA_CONFIG[impact];
   return (
-    <span style={{
-      fontFamily: "var(--font-mono)", fontSize: "8px", letterSpacing: "0.14em",
-      textTransform: "uppercase", padding: "2px 7px",
-      border: `1px solid ${cfg.bdr}`, color: cfg.color, background: cfg.bg,
-    }}>
+    <span style={{ fontFamily: "var(--font-mono)", fontSize: "8px", letterSpacing: "0.14em", textTransform: "uppercase", padding: "2px 7px", border: `1px solid ${cfg.bdr}`, color: cfg.color, background: cfg.bg }}>
       {cfg.label}
     </span>
   );
@@ -102,24 +82,18 @@ function CIABadge({ impact }: { impact: CIAImpact }) {
 function OverviewTab({ data, accent }: { data: ScenarioAnalysis["overview"]; accent: string }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-      <Card>
-        <SectionLabel>What happened</SectionLabel>
-        <p style={{ fontSize: "13px", lineHeight: 1.75, color: "var(--text-mid)" }}>{data.what_happened}</p>
-      </Card>
+      <Card><SectionLabel>What happened</SectionLabel><p style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.75, color: "var(--text)" }}>{data.what_happened}</p></Card>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-        <Card><SectionLabel>Scale & Impact</SectionLabel><p style={{ fontSize: "13px", lineHeight: 1.7, color: "var(--text-mid)" }}>{data.scale}</p></Card>
-        <Card><SectionLabel>Attribution</SectionLabel><p style={{ fontSize: "13px", lineHeight: 1.7, color: "var(--text-mid)" }}>{data.attribution}</p></Card>
+        <Card><SectionLabel>Scale & Impact</SectionLabel><p style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.7, color: "var(--text)" }}>{data.scale}</p></Card>
+        <Card><SectionLabel>Attribution</SectionLabel><p style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.7, color: "var(--text)" }}>{data.attribution}</p></Card>
       </div>
       <Card>
         <SectionLabel>Timeline</SectionLabel>
         <div>
           {data.timeline.map((ev: TimelineEvent, i: number) => (
-            <div key={i} style={{
-              display: "flex", gap: "16px", padding: "10px 0",
-              borderBottom: i < data.timeline.length - 1 ? "1px solid var(--border)" : "none",
-            }}>
+            <div key={i} style={{ display: "flex", gap: "16px", padding: "10px 0", borderBottom: i < data.timeline.length - 1 ? "1px solid var(--border)" : "none" }}>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", width: "110px", flexShrink: 0, paddingTop: "2px", color: accent }}>{ev.date}</span>
-              <span style={{ fontSize: "13px", lineHeight: 1.65, color: "var(--text-mid)" }}>{ev.event}</span>
+              <span style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.65, color: "var(--text)" }}>{ev.event}</span>
             </div>
           ))}
         </div>
@@ -131,7 +105,7 @@ function OverviewTab({ data, accent }: { data: ScenarioAnalysis["overview"]; acc
 function AnalystTab({ data, accent }: { data: ScenarioAnalysis["analyst"]; accent: string }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-      <Card><SectionLabel>Technical Summary</SectionLabel><p style={{ fontSize: "13px", lineHeight: 1.75, color: "var(--text-mid)" }}>{data.summary}</p></Card>
+      <Card><SectionLabel>Technical Summary</SectionLabel><p style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.75, color: "var(--text)" }}>{data.summary}</p></Card>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
         <Card><SectionLabel>Detection Methods</SectionLabel><BulletList items={data.detection} accent={accent} /></Card>
         <Card><SectionLabel>Indicators of Compromise</SectionLabel><BulletList items={data.iocs} accent={accent} /></Card>
@@ -147,13 +121,13 @@ function AnalystTab({ data, accent }: { data: ScenarioAnalysis["analyst"]; accen
 function CommanderTab({ data, accent }: { data: ScenarioAnalysis["commander"]; accent: string }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-      <Card><SectionLabel>Executive Summary</SectionLabel><p style={{ fontSize: "13px", lineHeight: 1.75, color: "var(--text-mid)" }}>{data.summary}</p></Card>
+      <Card><SectionLabel>Executive Summary</SectionLabel><p style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.75, color: "var(--text)" }}>{data.summary}</p></Card>
       <Card><SectionLabel>Critical Decision Points</SectionLabel><BulletList items={data.decisions} accent={accent} /></Card>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-        <Card><SectionLabel>Risk Framing</SectionLabel><p style={{ fontSize: "13px", lineHeight: 1.7, color: "var(--text-mid)" }}>{data.risk_framing}</p></Card>
-        <Card><SectionLabel>Disclosure</SectionLabel><p style={{ fontSize: "13px", lineHeight: 1.7, color: "var(--text-mid)" }}>{data.disclosure}</p></Card>
+        <Card><SectionLabel>Risk Framing</SectionLabel><p style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.7, color: "var(--text)" }}>{data.risk_framing}</p></Card>
+        <Card><SectionLabel>Disclosure</SectionLabel><p style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.7, color: "var(--text)" }}>{data.disclosure}</p></Card>
       </div>
-      <Card><SectionLabel>Policy Impact</SectionLabel><p style={{ fontSize: "13px", lineHeight: 1.75, color: "var(--text-mid)" }}>{data.policy_impact}</p></Card>
+      <Card><SectionLabel>Policy Impact</SectionLabel><p style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.75, color: "var(--text)" }}>{data.policy_impact}</p></Card>
     </div>
   );
 }
@@ -161,8 +135,8 @@ function CommanderTab({ data, accent }: { data: ScenarioAnalysis["commander"]; a
 function HCITab({ data, accent }: { data: ScenarioAnalysis["hci"]; accent: string }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-      <Card><SectionLabel>Human Factors Summary</SectionLabel><p style={{ fontSize: "13px", lineHeight: 1.75, color: "var(--text-mid)" }}>{data.summary}</p></Card>
-      <Card><SectionLabel>Cognitive Load Analysis</SectionLabel><p style={{ fontSize: "13px", lineHeight: 1.75, color: "var(--text-mid)" }}>{data.cognitive_load}</p></Card>
+      <Card><SectionLabel>Human Factors Summary</SectionLabel><p style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.75, color: "var(--text)" }}>{data.summary}</p></Card>
+      <Card><SectionLabel>Cognitive Load Analysis</SectionLabel><p style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.75, color: "var(--text)" }}>{data.cognitive_load}</p></Card>
       <Card><SectionLabel>Interface & UX Failures</SectionLabel><BulletList items={data.failures} accent={accent} /></Card>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
         <Card><SectionLabel>Design Questions</SectionLabel><BulletList items={data.design_questions} accent={accent} /></Card>
@@ -175,7 +149,7 @@ function HCITab({ data, accent }: { data: ScenarioAnalysis["hci"]; accent: strin
 function DesignLessonsTab({ data, accent }: { data: ScenarioAnalysis["design_lessons"]; accent: string }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-      <Card><SectionLabel>Summary</SectionLabel><p style={{ fontSize: "13px", lineHeight: 1.75, color: "var(--text-mid)" }}>{data.summary}</p></Card>
+      <Card><SectionLabel>Summary</SectionLabel><p style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.75, color: "var(--text)" }}>{data.summary}</p></Card>
       <Card><SectionLabel>Actionable Design Lessons</SectionLabel><BulletList items={data.lessons} accent={accent} /></Card>
       <Card><SectionLabel>Pattern Connections</SectionLabel><BulletList items={data.pattern_connections} accent={accent} /></Card>
     </div>
@@ -189,7 +163,7 @@ function IncidentTimelineTab({ data, accent }: { data: ScenarioAnalysis["inciden
     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
       <Card>
         <SectionLabel>Incident Arc</SectionLabel>
-        <p style={{ fontSize: "13px", lineHeight: 1.75, color: "var(--text-mid)" }}>{data.summary}</p>
+        <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.75, color: "var(--text)" }}>{data.summary}</p>
       </Card>
 
       <div style={{ position: "relative" }}>
@@ -201,36 +175,19 @@ function IncidentTimelineTab({ data, accent }: { data: ScenarioAnalysis["inciden
             return (
               <div key={i} style={{ paddingLeft: "44px", position: "relative" }}>
                 <div style={{ position: "absolute", left: 0, top: "12px", width: "38px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <div style={{
-                    width: "16px", height: "16px", border: `2px solid ${dominantCIA ? dominantCIA.color : accent}`,
-                    background: dominantCIA ? dominantCIA.bg : "var(--bg)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                  }}>
+                  <div style={{ width: "16px", height: "16px", border: `2px solid ${dominantCIA ? dominantCIA.color : accent}`, background: dominantCIA ? dominantCIA.bg : "var(--bg)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <div style={{ width: "6px", height: "6px", background: dominantCIA ? dominantCIA.color : accent }} />
                   </div>
                 </div>
 
-                <div style={{
-                  background: "var(--bg-card)",
-                  border: `1px solid ${isExpanded ? (dominantCIA ? dominantCIA.bdr : "var(--border)") : "var(--border)"}`,
-                }}>
-                  <button
-                    style={{
-                      width: "100%", textAlign: "left", padding: "12px 16px",
-                      display: "flex", alignItems: "center", gap: "12px",
-                      background: "transparent", border: "none", cursor: "pointer",
-                    }}
-                    onClick={() => setExpanded(isExpanded ? null : i)}
-                  >
+                <div style={{ background: "var(--bg-card)", border: `1px solid ${isExpanded ? (dominantCIA ? dominantCIA.bdr : "var(--border)") : "var(--border)"}` }}>
+                  <button style={{ width: "100%", textAlign: "left", padding: "12px 16px", display: "flex", alignItems: "center", gap: "12px", background: "transparent", border: "none", cursor: "pointer" }}
+                    onClick={() => setExpanded(isExpanded ? null : i)}>
                     <div style={{ flexShrink: 0, width: "56px" }}>
-                      <span style={{ fontFamily: "var(--font-mono)", fontSize: "8px", color: "var(--text-dim)" }}>
-                        {i === 0 ? "T+0" : stage.elapsed}
-                      </span>
+                      <span style={{ fontFamily: "var(--font-mono)", fontSize: "8px", color: "var(--text-dim)" }}>{i === 0 ? "T+0" : stage.elapsed}</span>
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontFamily: "var(--font-mono)", fontSize: "10px", letterSpacing: "0.06em", textTransform: "uppercase", color: isExpanded ? accent : "var(--text)", fontWeight: 500 }}>
-                        {stage.stage}
-                      </p>
+                      <p style={{ fontFamily: "var(--font-mono)", fontSize: "10px", letterSpacing: "0.06em", textTransform: "uppercase", color: isExpanded ? accent : "var(--text)", fontWeight: 500 }}>{stage.stage}</p>
                       <p style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--text-dim)" }}>{stage.timestamp}</p>
                     </div>
                     <div style={{ display: "flex", gap: "5px", flexShrink: 0 }}>
@@ -241,36 +198,35 @@ function IncidentTimelineTab({ data, accent }: { data: ScenarioAnalysis["inciden
 
                   {isExpanded && (
                     <div style={{ padding: "0 16px 16px", borderTop: "1px solid var(--border)" }}>
-                      <p style={{ fontSize: "13px", lineHeight: 1.75, color: "var(--text-mid)", marginTop: "14px", marginBottom: "14px" }}>{stage.description}</p>
+                      <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.75, color: "var(--text)", marginTop: "14px", marginBottom: "14px" }}>{stage.description}</p>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "14px" }}>
                         <div>
                           <SectionLabel>Who was involved</SectionLabel>
                           <ul style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
                             {stage.who_involved.map((who: string, j: number) => (
-                              <li key={j} style={{ display: "flex", gap: "8px", fontSize: "12px", color: "var(--text-mid)" }}>
-                                <span style={{ marginTop: "6px", width: "4px", height: "4px", background: accent, flexShrink: 0 }} />
-                                {who}
+                              <li key={j} style={{ display: "flex", gap: "8px", fontFamily: "var(--font-body)", fontSize: "12px", color: "var(--text)" }}>
+                                <span style={{ marginTop: "6px", width: "4px", height: "4px", background: accent, flexShrink: 0 }} />{who}
                               </li>
                             ))}
                           </ul>
                         </div>
                         <div>
                           <SectionLabel>Key action</SectionLabel>
-                          <p style={{ fontSize: "12px", lineHeight: 1.65, color: "var(--text-mid)", padding: "8px 12px", background: `${accent}10`, borderLeft: `2px solid ${accent}` }}>
+                          <p style={{ fontFamily: "var(--font-body)", fontSize: "12px", lineHeight: 1.65, color: "var(--text)", padding: "8px 12px", background: `${accent}10`, borderLeft: `2px solid ${accent}` }}>
                             {stage.key_action}
                           </p>
                         </div>
                       </div>
                       <div style={{ marginBottom: "14px" }}>
                         <SectionLabel>How awareness spread</SectionLabel>
-                        <p style={{ fontSize: "12px", lineHeight: 1.65, color: "var(--text-mid)" }}>{stage.how_spread}</p>
+                        <p style={{ fontFamily: "var(--font-body)", fontSize: "12px", lineHeight: 1.65, color: "var(--text)" }}>{stage.how_spread}</p>
                       </div>
                       <div>
                         <SectionLabel>CIA impact at this stage</SectionLabel>
                         <div style={{ display: "flex", gap: "6px", marginBottom: "8px", flexWrap: "wrap" }}>
                           {stage.cia_impacts.map((impact: CIAImpact) => <CIABadge key={impact} impact={impact} />)}
                         </div>
-                        <p style={{ fontSize: "12px", lineHeight: 1.65, color: "var(--text-dim)" }}>{stage.cia_rationale}</p>
+                        <p style={{ fontFamily: "var(--font-body)", fontSize: "12px", lineHeight: 1.65, color: "var(--text-dim)" }}>{stage.cia_rationale}</p>
                       </div>
                     </div>
                   )}
@@ -281,14 +237,13 @@ function IncidentTimelineTab({ data, accent }: { data: ScenarioAnalysis["inciden
         </div>
       </div>
 
-      {/* CIA legend */}
       <Card>
         <SectionLabel>CIA Triad Legend</SectionLabel>
         <div style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
           {(Object.entries(CIA_CONFIG) as [CIAImpact, typeof CIA_CONFIG[CIAImpact]][]).map(([key, cfg]) => (
             <div key={key} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <CIABadge impact={key} />
-              <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>
+              <span style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "var(--text-dim)" }}>
                 {key === "availability" ? "systems/services disrupted" : key === "confidentiality" ? "data accessed or exfiltrated" : "data or systems altered"}
               </span>
             </div>
@@ -298,8 +253,6 @@ function IncidentTimelineTab({ data, accent }: { data: ScenarioAnalysis["inciden
     </div>
   );
 }
-
-// ── Loading skeleton ──────────────────────────────────────────────────────────
 
 function LoadingSkeleton({ accent }: { accent: string }) {
   return (
@@ -321,8 +274,6 @@ function LoadingSkeleton({ accent }: { accent: string }) {
   );
 }
 
-// ── Main page ─────────────────────────────────────────────────────────────────
-
 export default function ScenarioDetailPage() {
   const params = useParams();
   const slug = typeof params.slug === "string" ? params.slug : params.slug?.[0] ?? "";
@@ -340,9 +291,7 @@ export default function ScenarioDetailPage() {
       const res = await fetch(`/api/scenarios/${slug}`);
       if (!res.ok) { const body = await res.json().catch(() => ({})); throw new Error(body.error ?? `HTTP ${res.status}`); }
       setAnalysis(await res.json() as ScenarioAnalysis);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
-    } finally { setLoading(false); }
+    } catch (err) { setError(err instanceof Error ? err.message : "Unknown error"); } finally { setLoading(false); }
   }, [slug]);
 
   const recordKnowledgeMapEntry = useCallback(async () => {
@@ -365,7 +314,7 @@ export default function ScenarioDetailPage() {
 
   if (!scenario) return (
     <div style={{ padding: "48px 56px" }}>
-      <p style={{ fontSize: "13px", color: "var(--text-dim)", marginBottom: "8px" }}>Scenario not found.</p>
+      <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", color: "var(--text-dim)", marginBottom: "8px" }}>Scenario not found.</p>
       <Link href="/scenarios" style={{ fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--pool)" }}>← Back to library</Link>
     </div>
   );
@@ -374,45 +323,24 @@ export default function ScenarioDetailPage() {
 
   return (
     <div style={{ padding: "48px 56px 80px", maxWidth: "900px" }}>
-
-      {/* Breadcrumb */}
-      <Link href="/scenarios" style={{
-        fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.16em",
-        textTransform: "uppercase", color: "var(--text-dim)", textDecoration: "none",
-        display: "inline-block", marginBottom: "24px", transition: "color 0.12s",
-      }}>
+      <Link href="/scenarios" style={{ fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--text-dim)", textDecoration: "none", display: "inline-block", marginBottom: "24px", transition: "color 0.12s" }}>
         ← Scenario Library
       </Link>
 
-      {/* Header */}
       <div style={{ marginBottom: "32px" }}>
         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-          <span style={{
-            fontFamily: "var(--font-mono)", fontSize: "8px", letterSpacing: "0.18em",
-            textTransform: "uppercase", padding: "2px 7px",
-            border: `1px solid ${severity.bdr}`, color: severity.color, background: severity.bg,
-          }}>
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: "8px", letterSpacing: "0.18em", textTransform: "uppercase", padding: "2px 7px", border: `1px solid ${severity.bdr}`, color: severity.color, background: severity.bg }}>
             {severity.label}
           </span>
-          <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--text-dim)" }}>
-            {scenario.type} · {scenario.sector} · {scenario.date}
-          </span>
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--text-dim)" }}>{scenario.type} · {scenario.sector} · {scenario.date}</span>
         </div>
-        <h1 style={{ fontSize: "26px", fontWeight: 600, color: "var(--text)", letterSpacing: "-0.02em", marginBottom: "10px" }}>
-          {scenario.name}
-        </h1>
-        <p style={{ fontSize: "13px", color: "var(--text-mid)", lineHeight: 1.7, maxWidth: "640px", marginBottom: "14px" }}>
-          {scenario.summary}
-        </p>
+        <h1 style={{ fontFamily: "var(--font-body)", fontSize: "26px", fontWeight: 500, color: "var(--text)", letterSpacing: "-0.02em", marginBottom: "10px" }}>{scenario.name}</h1>
+        <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", color: "var(--text)", lineHeight: 1.7, maxWidth: "640px", marginBottom: "14px" }}>{scenario.summary}</p>
         <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
           {scenario.tags.map((tag) => {
             const t = TAG_CONFIG[tag] ?? { color: "var(--text-dim)", bg: "var(--bg-subtle)", bdr: "var(--border)" };
             return (
-              <span key={tag} style={{
-                fontFamily: "var(--font-mono)", fontSize: "8px", letterSpacing: "0.14em",
-                textTransform: "uppercase", padding: "2px 7px",
-                border: `1px solid ${t.bdr}`, color: t.color, background: t.bg,
-              }}>
+              <span key={tag} style={{ fontFamily: "var(--font-mono)", fontSize: "8px", letterSpacing: "0.14em", textTransform: "uppercase", padding: "2px 7px", border: `1px solid ${t.bdr}`, color: t.color, background: t.bg }}>
                 {tag}
               </span>
             );
@@ -425,50 +353,36 @@ export default function ScenarioDetailPage() {
         {TABS.map((tab) => {
           const isActive = activeTab === tab.id;
           return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              style={{
-                flexShrink: 0, padding: "10px 16px",
-                fontFamily: "var(--font-mono)", fontSize: "9px",
-                letterSpacing: "0.12em", textTransform: "uppercase",
-                color: isActive ? tab.accent : "var(--text-dim)",
-                borderBottom: isActive ? `2px solid ${tab.accent}` : "2px solid transparent",
-                marginBottom: "-1px", background: "transparent", border: "none",
-                borderBottomStyle: "solid", borderBottomWidth: "2px",
-                borderBottomColor: isActive ? tab.accent : "transparent",
-                cursor: "pointer", transition: "color 0.12s",
-              }}
-            >
+            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+              style={{ flexShrink: 0, padding: "10px 16px", fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.12em", textTransform: "uppercase", color: isActive ? tab.accent : "var(--text-dim)", borderBottom: isActive ? `2px solid ${tab.accent}` : "2px solid transparent", marginBottom: "-1px", background: "transparent", border: "none", borderBottomStyle: "solid", borderBottomWidth: "2px", borderBottomColor: isActive ? tab.accent : "transparent", cursor: "pointer", transition: "color 0.12s" }}>
               {tab.label}
             </button>
           );
         })}
       </div>
 
-      {/* Content */}
       {loading ? (
         <LoadingSkeleton accent={activeTabDef.accent} />
       ) : error ? (
         <div style={{ background: "var(--bg-card)", border: "1px solid var(--clay-bdr)", padding: "24px" }}>
           <p style={{ fontFamily: "var(--font-mono)", fontSize: "8px", letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--clay)", marginBottom: "8px" }}>Error</p>
-          <p style={{ fontSize: "13px", color: "var(--text-mid)", marginBottom: "16px" }}>{error}</p>
+          <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", color: "var(--text-mid)", marginBottom: "16px" }}>{error}</p>
           <button onClick={fetchAnalysis} style={{ fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--pool)", background: "none", border: "none", cursor: "pointer" }}>Retry →</button>
         </div>
       ) : analysis ? (
         <div>
-          {activeTab === "overview"          && <OverviewTab          data={analysis.overview}          accent={activeTabDef.accent} />}
-          {activeTab === "analyst"           && <AnalystTab           data={analysis.analyst}           accent={activeTabDef.accent} />}
-          {activeTab === "commander"         && <CommanderTab         data={analysis.commander}         accent={activeTabDef.accent} />}
-          {activeTab === "hci"               && <HCITab               data={analysis.hci}               accent={activeTabDef.accent} />}
-          {activeTab === "design_lessons"    && <DesignLessonsTab     data={analysis.design_lessons}    accent={activeTabDef.accent} />}
+          {activeTab === "overview"          && <OverviewTab         data={analysis.overview}          accent={activeTabDef.accent} />}
+          {activeTab === "analyst"           && <AnalystTab          data={analysis.analyst}           accent={activeTabDef.accent} />}
+          {activeTab === "commander"         && <CommanderTab        data={analysis.commander}         accent={activeTabDef.accent} />}
+          {activeTab === "hci"               && <HCITab              data={analysis.hci}               accent={activeTabDef.accent} />}
+          {activeTab === "design_lessons"    && <DesignLessonsTab    data={analysis.design_lessons}    accent={activeTabDef.accent} />}
           {activeTab === "incident_timeline" && (
             analysis.incident_timeline ? (
               <IncidentTimelineTab data={analysis.incident_timeline} accent={activeTabDef.accent} />
             ) : (
               <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", padding: "24px" }}>
                 <p style={{ fontFamily: "var(--font-mono)", fontSize: "8px", letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--text-dim)", marginBottom: "8px" }}>Timeline not available</p>
-                <p style={{ fontSize: "13px", color: "var(--text-mid)", marginBottom: "16px" }}>This scenario was cached before the timeline feature was added. Regenerate the analysis to include it.</p>
+                <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", color: "var(--text-mid)", marginBottom: "16px" }}>This scenario was cached before the timeline feature was added. Regenerate the analysis to include it.</p>
                 <button onClick={fetchAnalysis} style={{ fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--pool)", background: "none", border: "none", cursor: "pointer" }}>Regenerate →</button>
               </div>
             )

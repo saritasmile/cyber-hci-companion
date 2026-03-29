@@ -5,14 +5,24 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { KnowledgeMapEntryRow, KnowledgeModule, DepthLevel } from "@/types/database";
 
-// ── Constants ─────────────────────────────────────────────────────────────────
+// ── Constants — all colors via CSS variables ──────────────────────────────────
 
 const MODULE_COLOR: Record<KnowledgeModule, string> = {
-  scenario: "#c04a0a",
-  study:    "#0a7a68",
-  rabbit:   "#1a4e8a",
-  patterns: "#6a3a9a",
-  scan:     "#8a5a1a",
+  scenario: "var(--clay)",
+  study:    "var(--leaf)",
+  rabbit:   "var(--pool)",
+  patterns: "var(--oak)",
+  scan:     "var(--text-dim)",
+};
+
+// Resolved hex values for SVG (SVG doesn't support CSS variables in fill/stroke)
+// These should match your globals.css token values
+const MODULE_COLOR_SVG: Record<KnowledgeModule, string> = {
+  scenario: "#c47b5a",
+  study:    "#4e6e30",
+  rabbit:   "#2e6878",
+  patterns: "#b8822a",
+  scan:     "#6a6050",
 };
 
 const MODULE_LABEL: Record<KnowledgeModule, string> = {
@@ -56,7 +66,22 @@ function MapSkeleton() {
   return (
     <div className="card animate-pulse" style={{ height: 480 }}>
       <div className="flex items-center justify-center h-full">
-        <p className="text-[10px] uppercase tracking-[0.2em]" style={{ fontFamily: "var(--font-mono)", color: "var(--text-dim)" }}>Loading map…</p>
+        <p className="text-[10px] uppercase tracking-[0.2em]"
+          style={{ fontFamily: "var(--font-mono)", color: "var(--text-dim)" }}>Loading map…</p>
+      </div>
+    </div>
+  );
+}
+
+// ── StatPill ──────────────────────────────────────────────────────────────────
+
+function StatPill({ label, value, colorVar, mono = false }: { label: string; value: string | number; colorVar: string; mono?: boolean }) {
+  return (
+    <div className="flex items-center gap-3 px-4 py-2.5 border" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-subtle)", borderRadius: "3px" }}>
+      <div>
+        <p className="text-[9px] uppercase tracking-[0.2em] mb-0.5"
+          style={{ fontFamily: "var(--font-mono)", color: "var(--text-dim)" }}>{label}</p>
+        <p className="leading-none" style={{ color: colorVar, fontFamily: mono ? "var(--font-mono)" : "var(--font-body)", fontSize: mono ? "12px" : "18px", fontWeight: 500 }}>{value}</p>
       </div>
     </div>
   );
@@ -97,9 +122,11 @@ export default function KnowledgeMapPage() {
     <div className="px-10 py-10 max-w-5xl responsive-padding">
       {/* Header */}
       <div className="mb-8">
-        <p className="text-[10px] uppercase tracking-[0.25em] mb-1" style={{ fontFamily: "var(--font-mono)", color: "var(--text-dim)" }}>Overview</p>
-        <h1 className="page-title mb-2" style={{ fontFamily: "var(--font-heading)" }}>Knowledge Map</h1>
-        <p className="text-sm max-w-xl leading-relaxed" style={{ color: "var(--text-mid)" }}>
+        <p className="text-[10px] uppercase tracking-[0.25em] mb-1"
+          style={{ fontFamily: "var(--font-mono)", color: "var(--text-dim)" }}>Overview</p>
+        <h1 className="page-title mb-2" style={{ fontFamily: "var(--font-body)" }}>Knowledge Map</h1>
+        <p className="max-w-xl"
+          style={{ fontFamily: "var(--font-body)", fontSize: "14px", color: "var(--text-mid)", lineHeight: 1.7 }}>
           Every topic you&apos;ve explored, visualised by depth and module. Click a node to revisit.
         </p>
       </div>
@@ -107,10 +134,15 @@ export default function KnowledgeMapPage() {
       {/* Stats bar */}
       {isAuthenticated && !loading && (
         <div className="flex flex-wrap gap-4 mb-7">
-          <StatPill label="Topics touched" value={totalTopics} color="#8a5a1a" />
-          <StatPill label="Modules active" value={modulesExplored} color="#1a4e8a" />
+          <StatPill label="Topics touched" value={totalTopics} colorVar="var(--oak)" />
+          <StatPill label="Modules active" value={modulesExplored} colorVar="var(--pool)" />
           {mostVisited && (
-            <StatPill label="Most visited" value={mostVisited.topic.length > 20 ? mostVisited.topic.slice(0, 20) + "…" : mostVisited.topic} color={MODULE_COLOR[mostVisited.module]} mono />
+            <StatPill
+              label="Most visited"
+              value={mostVisited.topic.length > 20 ? mostVisited.topic.slice(0, 20) + "…" : mostVisited.topic}
+              colorVar={MODULE_COLOR[mostVisited.module]}
+              mono
+            />
           )}
         </div>
       )}
@@ -120,34 +152,42 @@ export default function KnowledgeMapPage() {
         <MapSkeleton />
       ) : !isAuthenticated ? (
         <div className="card flex flex-col items-center justify-center text-center gap-4" style={{ height: 340 }}>
-          <p className="text-3xl" style={{ fontFamily: "var(--font-heading)", color: "var(--border-hi)" }}>◉</p>
+          <p style={{ fontFamily: "var(--font-heading)", fontSize: "28px", color: "var(--border-hi)" }}>◉</p>
           <div>
-            <p className="text-[10px] uppercase tracking-[0.2em] mb-2" style={{ fontFamily: "var(--font-mono)", color: "var(--text-dim)" }}>Sign in to see your map</p>
-            <p className="text-sm max-w-xs mx-auto leading-relaxed" style={{ color: "var(--text-mid)" }}>Your Knowledge Map builds as you explore topics across modules. Create a free account to track your progress.</p>
+            <p className="text-[10px] uppercase tracking-[0.2em] mb-2"
+              style={{ fontFamily: "var(--font-mono)", color: "var(--text-dim)" }}>Sign in to see your map</p>
+            <p className="max-w-xs mx-auto"
+              style={{ fontFamily: "var(--font-body)", fontSize: "13px", color: "var(--text-mid)", lineHeight: 1.65 }}>
+              Your Knowledge Map builds as you explore topics across modules. Create a free account to track your progress.
+            </p>
           </div>
           <button
             onClick={() => router.push("/auth?next=/knowledge-map")}
-            className="px-5 py-2 text-xs tracking-[0.15em] uppercase transition-colors"
-            style={{ fontFamily: "var(--font-mono)", backgroundColor: "#faf0e0", border: "1px solid #d4a860", borderRadius: "2px", color: "#8a5a1a" }}
+            className="px-5 py-2 uppercase tracking-[0.15em] transition-colors"
+            style={{ fontFamily: "var(--font-mono)", fontSize: "9px", backgroundColor: "var(--oak-bg)", border: "1px solid var(--oak-bdr)", borderRadius: "2px", color: "var(--oak)" }}
           >
             Sign in →
           </button>
         </div>
       ) : error ? (
-        <div className="card p-6" style={{ borderColor: "#f0c4a0" }}>
-          <p className="text-[10px] uppercase tracking-[0.2em] mb-2" style={{ fontFamily: "var(--font-mono)", color: "#c04a0a" }}>Error</p>
-          <p className="text-sm" style={{ color: "var(--text-mid)" }}>{error}</p>
+        <div className="card p-6" style={{ borderColor: "var(--clay-bdr)" }}>
+          <p className="text-[10px] uppercase tracking-[0.2em] mb-2"
+            style={{ fontFamily: "var(--font-mono)", color: "var(--clay)" }}>Error</p>
+          <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", color: "var(--text-mid)" }}>{error}</p>
         </div>
       ) : entries.length === 0 ? (
         <div className="card flex flex-col items-center justify-center text-center gap-4" style={{ height: 340 }}>
-          <p className="text-3xl" style={{ fontFamily: "var(--font-heading)", color: "var(--border-hi)" }}>◉</p>
+          <p style={{ fontFamily: "var(--font-heading)", fontSize: "28px", color: "var(--border-hi)" }}>◉</p>
           <div>
-            <p className="text-[10px] uppercase tracking-[0.2em] mb-2" style={{ fontFamily: "var(--font-mono)", color: "var(--text-dim)" }}>Your map is empty</p>
-            <p className="text-sm max-w-xs mx-auto leading-relaxed" style={{ color: "var(--text-mid)" }}>Start exploring topics in any module — your map populates as you learn.</p>
+            <p className="text-[10px] uppercase tracking-[0.2em] mb-2"
+              style={{ fontFamily: "var(--font-mono)", color: "var(--text-dim)" }}>Your map is empty</p>
+            <p className="max-w-xs mx-auto"
+              style={{ fontFamily: "var(--font-body)", fontSize: "13px", color: "var(--text-mid)", lineHeight: 1.65 }}>
+              Start exploring topics in any module — your map populates as you learn.
+            </p>
           </div>
         </div>
       ) : (
-        /* Map */
         <div className="relative border overflow-hidden" style={{ height: svgH, backgroundColor: "var(--bg-subtle)", borderColor: "var(--border)", borderRadius: "3px" }}>
           {/* Grid background */}
           <svg className="absolute inset-0 opacity-40" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
@@ -159,10 +199,10 @@ export default function KnowledgeMapPage() {
             <rect width="100%" height="100%" fill="url(#grid)" />
           </svg>
 
-          {/* Node canvas */}
+          {/* Node canvas — uses SVG hex values since SVG can't read CSS vars in fill */}
           <svg ref={svgRef} viewBox={`0 0 ${svgW} ${svgH}`} className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
             {positioned.map((entry) => {
-              const color = MODULE_COLOR[entry.module];
+              const color = MODULE_COLOR_SVG[entry.module];
               const size = DEPTH_SIZE[entry.depth_level];
               const opacity = DEPTH_OPACITY[entry.depth_level];
               const isHovered = hoveredId === entry.id;
@@ -193,19 +233,18 @@ export default function KnowledgeMapPage() {
           {/* Tooltip */}
           {tooltip && (
             <div
-              className="pointer-events-none absolute z-10 px-3 py-2 border text-xs max-w-[180px]"
+              className="pointer-events-none absolute z-10 px-3 py-2 border max-w-[180px]"
               style={{
                 left: Math.min(tooltip.x + 14, (svgRef.current?.getBoundingClientRect().width ?? 800) - 200),
                 top: Math.max(tooltip.y - 20, 8),
                 backgroundColor: "var(--bg-card)",
-                borderColor: MODULE_COLOR[tooltip.entry.module] + "60",
+                borderColor: "var(--border-hi)",
                 borderRadius: "3px",
-                boxShadow: "0 3px 12px rgba(0,0,0,0.12)",
                 fontFamily: "var(--font-mono)",
               }}
             >
-              <p className="font-medium truncate mb-0.5" style={{ color: "var(--text)" }}>{tooltip.entry.topic}</p>
-              <p style={{ color: MODULE_COLOR[tooltip.entry.module], fontSize: "9px" }} className="uppercase tracking-[0.15em]">
+              <p className="font-medium truncate mb-0.5" style={{ fontFamily: "var(--font-body)", fontSize: "12px", color: "var(--text)" }}>{tooltip.entry.topic}</p>
+              <p className="uppercase tracking-[0.15em]" style={{ color: MODULE_COLOR[tooltip.entry.module], fontSize: "9px" }}>
                 {MODULE_LABEL[tooltip.entry.module]} · {DEPTH_LABEL[tooltip.entry.depth_level]}
               </p>
               <p style={{ fontSize: "9px", color: "var(--text-dim)" }}>
@@ -220,23 +259,25 @@ export default function KnowledgeMapPage() {
       {isAuthenticated && !loading && entries.length > 0 && (
         <div className="mt-6 flex flex-wrap gap-6">
           <div>
-            <p className="text-[9px] uppercase tracking-[0.2em] mb-2" style={{ fontFamily: "var(--font-mono)", color: "var(--text-dim)" }}>Module</p>
+            <p className="text-[9px] uppercase tracking-[0.2em] mb-2"
+              style={{ fontFamily: "var(--font-mono)", color: "var(--text-dim)" }}>Module</p>
             <div className="flex flex-wrap gap-3">
-              {(Object.entries(MODULE_COLOR) as [KnowledgeModule, string][]).map(([mod, color]) => (
+              {(Object.entries(MODULE_COLOR_SVG) as [KnowledgeModule, string][]).map(([mod, color]) => (
                 <div key={mod} className="flex items-center gap-1.5">
                   <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }} />
-                  <span className="text-[10px]" style={{ fontFamily: "var(--font-mono)", color: "var(--text-mid)" }}>{MODULE_LABEL[mod]}</span>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--text-mid)" }}>{MODULE_LABEL[mod]}</span>
                 </div>
               ))}
             </div>
           </div>
           <div>
-            <p className="text-[9px] uppercase tracking-[0.2em] mb-2" style={{ fontFamily: "var(--font-mono)", color: "var(--text-dim)" }}>Depth</p>
+            <p className="text-[9px] uppercase tracking-[0.2em] mb-2"
+              style={{ fontFamily: "var(--font-mono)", color: "var(--text-dim)" }}>Depth</p>
             <div className="flex items-center gap-4">
               {(Object.entries(DEPTH_SIZE) as [DepthLevel, number][]).map(([depth, size]) => (
                 <div key={depth} className="flex items-center gap-1.5">
-                  <span className="rounded-full shrink-0" style={{ width: size, height: size, backgroundColor: "#8a5a1a", opacity: DEPTH_OPACITY[depth] }} />
-                  <span className="text-[10px]" style={{ fontFamily: "var(--font-mono)", color: "var(--text-mid)" }}>{DEPTH_LABEL[depth]}</span>
+                  <span className="rounded-full shrink-0" style={{ width: size, height: size, backgroundColor: "var(--oak)", opacity: DEPTH_OPACITY[depth] }} />
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--text-mid)" }}>{DEPTH_LABEL[depth]}</span>
                 </div>
               ))}
             </div>
@@ -247,44 +288,32 @@ export default function KnowledgeMapPage() {
       {/* Entry list */}
       {isAuthenticated && !loading && entries.length > 0 && (
         <div className="mt-8">
-          <p className="text-[9px] uppercase tracking-[0.2em] mb-3" style={{ fontFamily: "var(--font-mono)", color: "var(--text-dim)" }}>
+          <p className="text-[9px] uppercase tracking-[0.2em] mb-3"
+            style={{ fontFamily: "var(--font-mono)", color: "var(--text-dim)" }}>
             All entries — {entries.length} topic{entries.length !== 1 ? "s" : ""}
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
             {entries.map((entry) => {
-              const color = MODULE_COLOR[entry.module];
+              const color = MODULE_COLOR_SVG[entry.module];
               return (
                 <button
                   key={entry.id}
                   onClick={() => router.push(getTopicHref(entry))}
-                  className="flex items-center gap-3 px-3 py-2.5 border text-left transition-all group card"
+                  className="flex items-center gap-3 px-3 py-2.5 border text-left transition-all card"
                   style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
                 >
                   <span className="shrink-0 rounded-full" style={{ width: DEPTH_SIZE[entry.depth_level], height: DEPTH_SIZE[entry.depth_level], backgroundColor: color, opacity: DEPTH_OPACITY[entry.depth_level] }} />
                   <span className="flex-1 min-w-0">
-                    <span className="block text-xs truncate transition-colors" style={{ fontFamily: "var(--font-mono)", color: "var(--text)" }}>{entry.topic}</span>
+                    <span className="block truncate" style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--text)" }}>{entry.topic}</span>
                     <span className="block text-[9px] uppercase tracking-[0.1em]" style={{ color, fontFamily: "var(--font-mono)", opacity: 0.8 }}>{MODULE_LABEL[entry.module]}</span>
                   </span>
-                  <span className="shrink-0 text-[9px] transition-colors" style={{ fontFamily: "var(--font-mono)", color: "var(--text-dim)" }}>×{entry.visit_count}</span>
+                  <span className="shrink-0" style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--text-dim)" }}>×{entry.visit_count}</span>
                 </button>
               );
             })}
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-// ── StatPill ──────────────────────────────────────────────────────────────────
-
-function StatPill({ label, value, color, mono = false }: { label: string; value: string | number; color: string; mono?: boolean }) {
-  return (
-    <div className="flex items-center gap-3 px-4 py-2.5 border" style={{ borderColor: color + "40", backgroundColor: color + "10", borderRadius: "3px" }}>
-      <div>
-        <p className="text-[9px] uppercase tracking-[0.2em] mb-0.5" style={{ fontFamily: "var(--font-mono)", color: "var(--text-dim)" }}>{label}</p>
-        <p className="text-lg font-bold leading-none" style={{ color, fontFamily: mono ? "var(--font-mono)" : "var(--font-heading)", fontSize: mono ? "12px" : undefined }}>{value}</p>
-      </div>
     </div>
   );
 }

@@ -3,8 +3,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
 interface GlossaryTerm {
   id: string;
   term: string;
@@ -12,14 +10,10 @@ interface GlossaryTerm {
   definition: string;
   hci: string;
   related: string[];
-  sources: string[];         // scenario slugs where this was encountered
+  sources: string[];
   savedAt?: string;
   gotIt?: boolean;
 }
-
-// ── Static seed terms ─────────────────────────────────────────────────────────
-// In production these come from Supabase (terms saved via inline glossary),
-// with AI-generated definitions. This seed covers terms from existing scenarios.
 
 const SEED_TERMS: GlossaryTerm[] = [
   {
@@ -96,14 +90,7 @@ const SEED_TERMS: GlossaryTerm[] = [
   },
 ];
 
-// ── Term row — accordion ──────────────────────────────────────────────────────
-
-function TermRow({
-  term,
-  gotIt,
-  onToggleGotIt,
-  onRelatedClick,
-}: {
+function TermRow({ term, gotIt, onToggleGotIt, onRelatedClick }: {
   term: GlossaryTerm;
   gotIt: boolean;
   onToggleGotIt: (id: string) => void;
@@ -112,77 +99,47 @@ function TermRow({
   const [open, setOpen] = useState(false);
 
   return (
-    <div
-      style={{
-        border: `1px solid ${open ? "var(--pool-bdr)" : "var(--border)"}`,
-        marginBottom: "6px",
-        background: "var(--bg-card)",
-        opacity: gotIt && !open ? 0.45 : 1,
-        transition: "opacity 0.15s, border-color 0.15s",
-        boxShadow: open ? "0 2px 10px rgba(0,0,0,0.06)" : "none",
-      }}
-    >
-      {/* Summary row */}
+    <div style={{
+      border: `1px solid ${open ? "var(--pool-bdr)" : "var(--border)"}`,
+      marginBottom: "6px",
+      background: "var(--bg-card)",
+      opacity: gotIt && !open ? 0.45 : 1,
+      transition: "opacity 0.15s, border-color 0.15s",
+    }}>
       <div
         onClick={() => setOpen(!open)}
-        style={{
-          display: "flex", alignItems: "center", gap: "12px",
-          padding: "12px 16px", cursor: "pointer",
-        }}
+        style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 16px", cursor: "pointer" }}
         onMouseEnter={e => { if (!open) (e.currentTarget.querySelector(".term-name") as HTMLElement)!.style.color = "var(--pool)"; }}
         onMouseLeave={e => { if (!open) (e.currentTarget.querySelector(".term-name") as HTMLElement)!.style.color = "var(--text)"; }}
       >
-        <span
-          className="term-name"
-          style={{ flex: 1, fontSize: "14px", fontWeight: 500, color: open ? "var(--pool)" : "var(--text)", transition: "color 0.12s" }}
-        >
+        <span className="term-name" style={{ flex: 1, fontFamily: "var(--font-body)", fontSize: "14px", fontWeight: 500, color: open ? "var(--pool)" : "var(--text)", transition: "color 0.12s" }}>
           {term.term}
         </span>
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--text-dim)", flexShrink: 0 }}>
-          {term.pronunciation}
-        </span>
-        {gotIt && (
-          <span style={{ fontFamily: "var(--font-mono)", fontSize: "8px", color: "var(--leaf)", flexShrink: 0 }}>✓</span>
-        )}
-        <span style={{
-          fontFamily: "var(--font-mono)", fontSize: "13px", color: open ? "var(--pool)" : "var(--text-dim)",
-          flexShrink: 0, display: "inline-block",
-          transition: "transform 0.18s, color 0.12s",
-          transform: open ? "rotate(90deg)" : "rotate(0deg)",
-        }}>›</span>
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--text-dim)", flexShrink: 0 }}>{term.pronunciation}</span>
+        {gotIt && <span style={{ fontFamily: "var(--font-mono)", fontSize: "8px", color: "var(--leaf)", flexShrink: 0 }}>✓</span>}
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: "13px", color: open ? "var(--pool)" : "var(--text-dim)", flexShrink: 0, display: "inline-block", transition: "transform 0.18s, color 0.12s", transform: open ? "rotate(90deg)" : "rotate(0deg)" }}>›</span>
       </div>
 
-      {/* Expanded body */}
       {open && (
         <div style={{ padding: "0 16px 18px", borderTop: "1px solid var(--border)" }}>
-
-          {/* Definition */}
           <div style={{ marginTop: "14px" }}>
             <p style={{ fontFamily: "var(--font-mono)", fontSize: "8px", letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--text-dim)", marginBottom: "5px" }}>Plain English</p>
-            <p style={{ fontSize: "13px", color: "var(--text-mid)", lineHeight: 1.7 }}>{term.definition}</p>
+            <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", color: "var(--text)", lineHeight: 1.7 }}>{term.definition}</p>
           </div>
 
-          {/* HCI */}
           <div style={{ marginTop: "14px" }}>
             <p style={{ fontFamily: "var(--font-mono)", fontSize: "8px", letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--text-dim)", marginBottom: "5px" }}>Why it matters for HCI / UX</p>
-            <div style={{ fontSize: "12px", color: "var(--text-mid)", lineHeight: 1.65, background: "var(--clay-bg)", borderLeft: "2px solid var(--clay-bdr)", padding: "8px 11px" }}>
+            <div style={{ fontFamily: "var(--font-body)", fontSize: "13px", color: "var(--text)", lineHeight: 1.65, background: "var(--clay-bg)", borderLeft: "2px solid var(--clay-bdr)", padding: "8px 11px" }}>
               {term.hci}
             </div>
           </div>
 
-          {/* Related */}
           <div style={{ marginTop: "14px" }}>
             <p style={{ fontFamily: "var(--font-mono)", fontSize: "8px", letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--text-dim)", marginBottom: "8px" }}>Related terms</p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "5px" }}>
               {term.related.map(r => (
-                <button
-                  key={r}
-                  onClick={() => onRelatedClick(r)}
-                  style={{
-                    fontFamily: "var(--font-mono)", fontSize: "8px", padding: "2px 7px",
-                    border: "1px solid var(--pool-bdr)", background: "var(--pool-bg)",
-                    color: "var(--pool)", cursor: "pointer", transition: "border-color 0.1s",
-                  }}
+                <button key={r} onClick={() => onRelatedClick(r)}
+                  style={{ fontFamily: "var(--font-mono)", fontSize: "8px", padding: "2px 7px", border: "1px solid var(--pool-bdr)", background: "var(--pool-bg)", color: "var(--pool)", cursor: "pointer", transition: "border-color 0.1s" }}
                   onMouseEnter={e => (e.currentTarget.style.borderColor = "var(--pool)")}
                   onMouseLeave={e => (e.currentTarget.style.borderColor = "var(--pool-bdr)")}
                 >
@@ -192,7 +149,6 @@ function TermRow({
             </div>
           </div>
 
-          {/* Footer */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "16px", paddingTop: "12px", borderTop: "1px solid var(--border)", flexWrap: "wrap", gap: "8px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
               {term.sources.map(s => (
@@ -201,16 +157,8 @@ function TermRow({
                 </span>
               ))}
             </div>
-            <button
-              onClick={() => onToggleGotIt(term.id)}
-              style={{
-                fontFamily: "var(--font-mono)", fontSize: "8px", letterSpacing: "0.1em",
-                textTransform: "uppercase", padding: "4px 10px",
-                border: `1px solid ${gotIt ? "var(--leaf-bdr)" : "var(--border)"}`,
-                background: gotIt ? "var(--leaf-bg)" : "transparent",
-                color: gotIt ? "var(--leaf)" : "var(--text-dim)",
-                cursor: "pointer", transition: "all 0.12s",
-              }}
+            <button onClick={() => onToggleGotIt(term.id)}
+              style={{ fontFamily: "var(--font-mono)", fontSize: "8px", letterSpacing: "0.1em", textTransform: "uppercase", padding: "4px 10px", border: `1px solid ${gotIt ? "var(--leaf-bdr)" : "var(--border)"}`, background: gotIt ? "var(--leaf-bg)" : "transparent", color: gotIt ? "var(--leaf)" : "var(--text-dim)", cursor: "pointer", transition: "all 0.12s" }}
             >
               {gotIt ? "✓ Got it" : "Got it"}
             </button>
@@ -221,20 +169,15 @@ function TermRow({
   );
 }
 
-// ── Main page ─────────────────────────────────────────────────────────────────
-
 type Filter = "all" | "learning" | "gotit";
 
 export default function GlossaryPage() {
-  const [terms, setTerms] = useState<GlossaryTerm[]>(SEED_TERMS);
+  const [terms] = useState<GlossaryTerm[]>(SEED_TERMS);
   const [gotItIds, setGotItIds] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
 
-  // In production: load saved terms + gotIt state from Supabase
-  useEffect(() => {
-    // supabase.from('glossary_terms').select(...) — not yet implemented
-  }, []);
+  useEffect(() => {}, []);
 
   const toggleGotIt = useCallback((id: string) => {
     setGotItIds(prev => {
@@ -256,7 +199,6 @@ export default function GlossaryPage() {
     return matchesSearch && matchesFilter;
   });
 
-  // Group by first letter
   const grouped: Record<string, GlossaryTerm[]> = {};
   filtered.forEach(t => {
     const letter = t.term[0].toUpperCase();
@@ -274,70 +216,54 @@ export default function GlossaryPage() {
       learning: { color: "var(--oak)",   bg: "var(--oak-bg)",    bdr: "var(--oak-bdr)"   },
       gotit:    { color: "var(--leaf)",  bg: "var(--leaf-bg)",   bdr: "var(--leaf-bdr)"  },
     }[f];
-  return {
-    fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.1em",
-    textTransform: "uppercase" as const, padding: "7px 12px",
-    border: `1px solid ${active ? config.bdr : "var(--border)"}`,
-    background: active ? config.bg : "transparent",
-    color: active ? config.color : "var(--text-dim)",
-    cursor: "pointer", transition: "all 0.12s", whiteSpace: "nowrap" as const,
+    return {
+      fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.1em",
+      textTransform: "uppercase" as const, padding: "7px 12px",
+      border: `1px solid ${active ? config.bdr : "var(--border)"}`,
+      background: active ? config.bg : "transparent",
+      color: active ? config.color : "var(--text-dim)",
+      cursor: "pointer", transition: "all 0.12s", whiteSpace: "nowrap" as const,
     };
   };
 
   return (
     <div style={{ padding: "48px 56px 80px", maxWidth: "860px" }}>
-
-      {/* Header */}
       <div style={{ marginBottom: "28px" }}>
-        <p style={{ fontFamily: "var(--font-mono)", fontSize: "8px", letterSpacing: "0.28em", textTransform: "uppercase", color: "var(--text-mid)", marginBottom: "10px" }}> 
-          Module — Glossary 
+        <p style={{ fontFamily: "var(--font-mono)", fontSize: "8px", letterSpacing: "0.28em", textTransform: "uppercase", color: "var(--text-dim)", marginBottom: "10px" }}>
+          Module — Glossary
         </p>
-        <h1 style={{ fontSize: "26px", fontWeight: 600, color: "var(--text)", letterSpacing: "-0.02em", marginBottom: "8px" }}>
+        <h1 style={{ fontFamily: "var(--font-body)", fontSize: "26px", fontWeight: 500, color: "var(--text)", letterSpacing: "-0.02em", marginBottom: "8px" }}>
           Your Glossary
         </h1>
-        <p style={{ fontSize: "14px", color: "var(--text-mid)", lineHeight: 1.65, maxWidth: "480px" }}>
-          Terms you've encountered while exploring. Written for designers, not analysts — plain English with HCI context baked in. Highlight any term in a scenario to save it here.
+        <p style={{ fontFamily: "var(--font-body)", fontSize: "14px", color: "var(--text-mid)", lineHeight: 1.7, maxWidth: "480px" }}>
+          Terms you've encountered while exploring. Written for designers, not analysts — plain English with HCI context baked in.
         </p>
       </div>
 
       {/* Stats */}
       <div style={{ display: "flex", flexDirection: "row", gap: "10px", marginBottom: "24px" }}>
         {[
-          { label: "Saved",         value: terms.length,    color: "var(--pool)" },
-          { label: "Got it",        value: completedCount,  color: "var(--leaf)" },
-          { label: "Learning",      value: learningCount,  color: "var(--oak)"  },
+          { label: "Saved",    value: terms.length,   color: "var(--pool)" },
+          { label: "Got it",   value: completedCount, color: "var(--leaf)" },
+          { label: "Learning", value: learningCount,  color: "var(--oak)"  },
         ].map(stat => (
-          <div key={stat.label} style={{
-            background: "var(--bg-card)",
-            border: "1px solid var(--border)",
-            padding: "14px 24px",
-            textAlign: "center",
-            minWidth: "90px",
-          }}>
-            <p style={{ fontFamily: "var(--font-body)", fontSize: "26px", fontWeight: 600, color: stat.color, marginBottom: "4px", letterSpacing: "-0.02em" }}>{stat.value}</p>
-            <p style={{ fontFamily: "var(--font-mono)", fontSize: "8px", letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--text-mid)" }}>{stat.label}</p>
+          <div key={stat.label} style={{ background: "var(--bg-card)", border: "1px solid var(--border)", padding: "14px 24px", textAlign: "center", minWidth: "90px" }}>
+            <p style={{ fontFamily: "var(--font-body)", fontSize: "26px", fontWeight: 500, color: stat.color, marginBottom: "4px", letterSpacing: "-0.02em" }}>{stat.value}</p>
+            <p style={{ fontFamily: "var(--font-mono)", fontSize: "8px", letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--text-dim)" }}>{stat.label}</p>
           </div>
         ))}
       </div>
 
       {/* Controls */}
       <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "20px", flexWrap: "wrap" }}>
-        <div style={{
-          flex: 1, minWidth: "200px", display: "flex", alignItems: "center", gap: "8px",
-          background: "var(--bg-card)", border: "1px solid var(--border)", padding: "8px 12px",
-          transition: "border-color 0.12s",
-        }}>
+        <div style={{ flex: 1, minWidth: "200px", display: "flex", alignItems: "center", gap: "8px", background: "var(--bg-card)", border: "1px solid var(--border)", padding: "8px 12px" }}>
           <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--text-dim)" }}>⌕</span>
           <input
-            type="text"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
+            type="text" value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Search terms…"
             style={{ flex: 1, border: "none", background: "transparent", fontFamily: "var(--font-body)", fontSize: "13px", color: "var(--text)", outline: "none" }}
           />
-          {search && (
-            <button onClick={() => setSearch("")} style={{ border: "none", background: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "11px" }}>✕</button>
-          )}
+          {search && <button onClick={() => setSearch("")} style={{ border: "none", background: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "11px" }}>✕</button>}
         </div>
         <button style={filterBtnStyle("all")} onClick={() => setFilter("all")}>All</button>
         <button style={filterBtnStyle("learning")} onClick={() => setFilter("learning")}>Still learning</button>
@@ -347,33 +273,22 @@ export default function GlossaryPage() {
       {/* Terms */}
       {Object.keys(grouped).sort().map(letter => (
         <div key={letter} style={{ marginBottom: "24px" }}>
-          <p style={{
-            fontFamily: "var(--font-body)", fontSize: "22px", fontWeight: 700,
-            color: "var(--text-dim)", marginBottom: "8px", paddingBottom: "6px",
-            borderBottom: "1px solid var(--border)",
-          }}>
+          <p style={{ fontFamily: "var(--font-body)", fontSize: "22px", fontWeight: 500, color: "var(--text-dim)", marginBottom: "8px", paddingBottom: "6px", borderBottom: "1px solid var(--border)" }}>
             {letter}
           </p>
           {grouped[letter].map(term => (
-            <TermRow
-              key={term.id}
-              term={term}
-              gotIt={gotItIds.has(term.id)}
-              onToggleGotIt={toggleGotIt}
-              onRelatedClick={handleRelatedClick}
-            />
+            <TermRow key={term.id} term={term} gotIt={gotItIds.has(term.id)} onToggleGotIt={toggleGotIt} onRelatedClick={handleRelatedClick} />
           ))}
         </div>
       ))}
 
       {filtered.length === 0 && (
         <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", padding: "32px", textAlign: "center" }}>
-          <p style={{ fontSize: "14px", color: "var(--text-dim)" }}>
-            {search ? `No terms matching "${search}"` : "No terms yet — explore some scenarios and highlight unfamiliar words to save them here."}
+          <p style={{ fontFamily: "var(--font-body)", fontSize: "14px", color: "var(--text-dim)" }}>
+            {search ? `No terms matching "${search}"` : "No terms yet — explore some scenarios to save them here."}
           </p>
         </div>
       )}
-
     </div>
   );
 }

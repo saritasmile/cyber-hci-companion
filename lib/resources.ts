@@ -337,23 +337,23 @@ export const resources: Resource[] = [
 ];
 
 export const RESOURCE_TYPE_CONFIG: Record<string, { label: string; icon: string; color: string; bg: string; bdr: string }> = {
-  course:  { label: "Course",   icon: "◈", color: "#5a7c3a", bg: "#edf4e4", bdr: "#b0cc90" },  // leaf
-  book:    { label: "Book",     icon: "◇", color: "#c8924a", bg: "#f5ede0", bdr: "#d8c4a4" },  // oak
-  tool:    { label: "Tool",     icon: "⬡", color: "#3d7a8a", bg: "#e8f2f5", bdr: "#a8ccd8" },  // pool
-  youtube: { label: "YouTube", icon: "▷", color: "var(--clay)", bg: "var(--clay-bg)", bdr: "var(--clay-bdr)" }, // new clay which is kelly green
-  reddit:  { label: "Reddit",   icon: "◎", color: "#3d7a8a", bg: "#e8f2f5", bdr: "#a8ccd8" },  // pool
-  expert:  { label: "Expert",   icon: "◉", color: "#c8924a", bg: "#f5ede0", bdr: "#d8c4a4" },  // oak
+  course:  { label: "Course",  icon: "◈", color: "var(--leaf)", bg: "var(--leaf-bg)", bdr: "var(--leaf-bdr)" },
+  book:    { label: "Book",    icon: "◇", color: "var(--oak)",  bg: "var(--oak-bg)",  bdr: "var(--oak-bdr)"  },
+  tool:    { label: "Tool",    icon: "⬡", color: "var(--pool)", bg: "var(--pool-bg)", bdr: "var(--pool-bdr)" },
+  youtube: { label: "YouTube", icon: "▷", color: "var(--clay)", bg: "var(--clay-bg)", bdr: "var(--clay-bdr)" },
+  reddit:  { label: "Reddit",  icon: "◎", color: "var(--pool)", bg: "var(--pool-bg)", bdr: "var(--pool-bdr)" },
+  expert:  { label: "Expert",  icon: "◉", color: "var(--oak)",  bg: "var(--oak-bg)",  bdr: "var(--oak-bdr)"  },
 };
 
 export const RESOURCE_STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; bdr: string }> = {
-  saved:          { label: "Saved",          color: "#3d7a8a", bg: "#e8f2f5", bdr: "#a8ccd8" },  // pool
-  in_progress:    { label: "In Progress",    color: "#c8924a", bg: "#f5ede0", bdr: "#d8c4a4" },  // oak
-  completed:      { label: "Completed",      color: "#5a7c3a", bg: "#edf4e4", bdr: "#b0cc90" },  // leaf
-  not_interested: { label: "Not Interested", color: "#6b6560", bg: "#e8e5e1", bdr: "#b8b4ac" },  // concrete dim
+  saved:          { label: "Saved",          color: "var(--pool)",     bg: "var(--pool-bg)",   bdr: "var(--pool-bdr)"  },
+  in_progress:    { label: "In Progress",    color: "var(--oak)",      bg: "var(--oak-bg)",    bdr: "var(--oak-bdr)"   },
+  completed:      { label: "Completed",      color: "var(--leaf)",     bg: "var(--leaf-bg)",   bdr: "var(--leaf-bdr)"  },
+  not_interested: { label: "Not Interested", color: "var(--text-dim)", bg: "var(--bg-subtle)", bdr: "var(--border)"    },
 };
 
 export const COST_CONFIG: Record<string, { label: string; color: string }> = {
-  free:     { label: "Free",     color: "#5a7c3a" },  // leaf
-  freemium: { label: "Freemium", color: "#c8924a" },  // oak
-  paid:     { label: "Paid",     color: "#6b6560" },  // concrete dim
+  free:     { label: "Free",     color: "var(--leaf)"     },
+  freemium: { label: "Freemium", color: "var(--oak)"      },
+  paid:     { label: "Paid",     color: "var(--text-dim)" },
 };

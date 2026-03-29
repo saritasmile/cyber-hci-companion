@@ -169,7 +169,7 @@ function SessionCards({ recentTopics }: { recentTopics: string[] }) {
               background: "var(--bg-hover)", padding: "24px 26px",
               cursor: "pointer", position: "relative", transition: "background 0.12s",
             }}
-            onMouseEnter={e => (e.currentTarget.style.background = "#ede3d4")}
+            onMouseEnter={e => (e.currentTarget.style.background = "var(--bg-subtle)")}
             onMouseLeave={e => (e.currentTarget.style.background = "var(--bg-hover)")}
           >
             <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "3px", background: "var(--oak)" }} />

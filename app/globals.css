@@ -11,30 +11,31 @@
 /* ── Design tokens ─────────────────────────────────────────────────────────── */
 
 :root {
-  /* ── Concrete surfaces ── */
-  --bg:             #eceae6;   /* slightly deeper concrete */
-  --bg-card:        #f6f5f2;   /* cards stay lighter but less washed */
-  --bg-subtle:      #dedad4;   /* recessed panels — more distinct */
+  /* ── Warm parchment surfaces ── */
+  --bg:             #f7f2ea;   /* warm parchment page background */
+  --bg-card:        #fdf9f2;   /* card surface — slightly lighter */
+  --bg-subtle:      #f0e6d4;   /* recessed panels — warm sand */
+  --bg-hover:       #f0e6d4;   /* hover state — warm sand */
 
 
   /* ── Sidebar ── */
-  --sidebar-bg:     #1c1a17;   /* board-formed dark concrete */
-  --sidebar-text:   #c8c4bc;   /* weathered limestone text */
-  --sidebar-dim:    #7a7570;   /* recessed label */
-  --sidebar-active: #f8f7f4;   /* active nav item */
-  --sidebar-bdr:    #2e2b27;   /* hairline seam */
-  --sidebar-hover:  #252320;   /* hover surface */
+  --sidebar-bg:     #2e6878;   /* lagoon pool blue */
+  --sidebar-text:   #a8d8e8;   /* light pool text */
+  --sidebar-dim:    #6aaabb;   /* recessed label */
+  --sidebar-active: #d4eef5;   /* active nav item */
+  --sidebar-bdr:    rgba(255,255,255,0.12);   /* hairline seam */
+  --sidebar-hover:  rgba(255,255,255,0.1);    /* hover surface */
 
-  /* ── Borders — precision seam lines ── */
-  --border:         #c4c0b8;   /* stronger joint lines */
-  --border-hi:      #9c9890;   /* emphasized joints */
-  --border-strong:  #888480;   /* structural seam */
+  /* ── Borders — warm seam lines ── */
+  --border:         #ddd0b8;   /* warm joint lines */
+  --border-hi:      #c8b898;   /* emphasized joints */
+  --border-strong:  #b8a888;   /* structural seam */
 
   /* ── Text — high contrast, warm ── */
-  --text:           #141210;   /* deeper near-black */
-  --text-mid:       #2c2a24;   /* much darker — was too grey */
-  --text-dim:       #524f48;   /* darker dim — was nearly invisible */
-  --text-xdim:      #7a7670;   /* bumped up too */
+  --text:           #141210;   /* near-black — headings, primary content */
+  --text-mid:       #3a3528;   /* body copy — warm dark brown, strong contrast */
+  --text-dim:       #6a6050;   /* secondary labels — recessed but readable */
+  --text-xdim:      #8a7e6e;   /* hints, placeholders, timestamps */
 
   /* ── Oak — warm honey wood ── */
   --oak:            #b8822a;   /* richer, more saturated */
@@ -55,11 +56,11 @@
   --leaf-bg:        #e8f0de;
   --leaf-bdr:       #a0be7c;
 
-  /* ── Clay — earth, danger, warning ── */
-  --clay:           #5c7a1e;
-  --clay-light:     #6e9224;
-  --clay-bg:        #e8f0d4;
-  --clay-bdr:       #aac478;
+  /* ── Clay — terracotta, earth, warning ── */
+  --clay:           #c47b5a;
+  --clay-light:     #d4916e;
+  --clay-bg:        #fde8de;
+  --clay-bdr:       #e0a888;
 
   /* ── Legacy aliases — keep component code working ── */
   --analyst:        var(--leaf);
@@ -106,7 +107,19 @@ body {
   color: var(--text);
   font-family: var(--font-body);
   font-size: 14px;
-  line-height: 1.6;
+  line-height: 1.65;
+}
+
+/* Ensure all text elements inherit the body font unless explicitly overridden */
+p, li, span, td, th, label, input, textarea, select, button {
+  font-family: inherit;
+}
+
+/* Headings use the heading font — override where needed */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  color: var(--text);
+  line-height: 1.2;
 }
 
 a {
@@ -148,7 +161,7 @@ a:hover { color: var(--pool-light); }
 }
 
 .sidebar-wordmark strong {
-  color: var(--oak);
+  color: #e8a84a;   /* honey amber — pops against pool blue sidebar */
 }
 
 .sidebar-divider {
@@ -347,13 +360,13 @@ a:hover { color: var(--pool-light); }
 }
 
 .chip-oak  { color: var(--oak);  border-color: var(--oak-bdr);  background-color: var(--oak-bg); }
-.chip-oak:hover  { background-color: #e8d9c0; border-color: var(--oak-bdr-hi); }
+.chip-oak:hover  { background-color: #edd8b8; border-color: var(--oak-bdr-hi); }
 
 .chip-pool { color: var(--pool); border-color: var(--pool-bdr); background-color: var(--pool-bg); }
-.chip-pool:hover { background-color: #cce0e8; }
+.chip-pool:hover { background-color: #c8dce8; }
 
 .chip-leaf { color: var(--leaf); border-color: var(--leaf-bdr); background-color: var(--leaf-bg); }
-.chip-leaf:hover { background-color: #d8e8c8; }
+.chip-leaf:hover { background-color: #ccddb8; }
 
 /* ── Typography scale ──────────────────────────────────────────────────────── */
 
@@ -500,7 +513,7 @@ a:hover { color: var(--pool-light); }
   border-color: var(--oak-bdr);
 }
 .btn-accent:hover {
-  background-color: #e8d9c0;
+  background-color: #edd8b8;
   border-color: var(--oak-bdr-hi);
 }
 

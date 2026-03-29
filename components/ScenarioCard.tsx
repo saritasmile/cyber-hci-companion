@@ -4,16 +4,18 @@ import Link from "next/link";
 import { useState } from "react";
 import type { SeverityLevel, LensTag } from "@/lib/scenarios";
 
+// ── All colors driven by CSS variables from globals.css ───────────────────────
+
 const SEVERITY_CONFIG = {
-  critical: { label: "Critical", color: "#8a4a38", bg: "#f2ebe8", bdr: "#c8a89c" },
-  high:     { label: "High",     color: "var(--oak)",      bg: "var(--oak-bg)",    bdr: "var(--oak-bdr)"  },
-  medium:   { label: "Medium",   color: "var(--text-dim)", bg: "var(--bg-subtle)", bdr: "var(--border)"   },
+  critical: { label: "Critical", color: "var(--clay)",     bg: "var(--clay-bg)",   bdr: "var(--clay-bdr)"  },
+  high:     { label: "High",     color: "var(--oak)",      bg: "var(--oak-bg)",    bdr: "var(--oak-bdr)"   },
+  medium:   { label: "Medium",   color: "var(--text-dim)", bg: "var(--bg-subtle)", bdr: "var(--border)"    },
 };
 
 const LENS_CONFIG: Record<LensTag, { color: string; bg: string; bdr: string }> = {
-  Analyst:   { color: "var(--leaf)",      bg: "var(--leaf-bg)",  bdr: "var(--leaf-bdr)"  },
-  Commander: { color: "var(--pool)",      bg: "var(--pool-bg)",  bdr: "var(--pool-bdr)"  },
-  HCI:       { color: "var(--clay)",      bg: "var(--clay-bg)",  bdr: "var(--clay-bdr)"  },
+  Analyst:   { color: "var(--leaf)", bg: "var(--leaf-bg)", bdr: "var(--leaf-bdr)" },
+  Commander: { color: "var(--pool)", bg: "var(--pool-bg)", bdr: "var(--pool-bdr)" },
+  HCI:       { color: "var(--clay)", bg: "var(--clay-bg)", bdr: "var(--clay-bdr)" },
 };
 
 interface ScenarioCardProps {
@@ -64,6 +66,7 @@ export default function ScenarioCard({
 
         {/* Name */}
         <h2 style={{
+          fontFamily: "var(--font-body)",
           fontSize: "15px", fontWeight: 500, color: "var(--text)",
           marginBottom: "4px", lineHeight: 1.3, letterSpacing: "-0.01em",
         }}>
@@ -78,9 +81,10 @@ export default function ScenarioCard({
           {type} · {sector}
         </p>
 
-        {/* Summary */}
+        {/* Summary — bumped to 13px, full --text for readability */}
         <p style={{
-          fontSize: "12px", color: "var(--text-mid)",
+          fontFamily: "var(--font-body)",
+          fontSize: "13px", color: "var(--text)",
           lineHeight: 1.65, marginBottom: "16px",
           display: "-webkit-box",
           WebkitLineClamp: 3,
@@ -95,15 +99,12 @@ export default function ScenarioCard({
           {tags.map((tag) => {
             const lens = LENS_CONFIG[tag];
             return (
-              <span
-                key={tag}
-                style={{
-                  fontFamily: "var(--font-mono)", fontSize: "8px",
-                  letterSpacing: "0.14em", textTransform: "uppercase",
-                  padding: "2px 7px", border: `1px solid ${lens.bdr}`,
-                  color: lens.color, background: lens.bg,
-                }}
-              >
+              <span key={tag} style={{
+                fontFamily: "var(--font-mono)", fontSize: "8px",
+                letterSpacing: "0.14em", textTransform: "uppercase",
+                padding: "2px 7px", border: `1px solid ${lens.bdr}`,
+                color: lens.color, background: lens.bg,
+              }}>
                 {tag}
               </span>
             );
