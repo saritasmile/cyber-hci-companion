@@ -6,6 +6,7 @@ import Link from "next/link";
 import { scenarios } from "@/lib/scenarios";
 import { supabase } from "@/lib/supabase";
 import type { ScenarioAnalysis, TimelineEvent, IncidentStage, CIAImpact } from "@/lib/scenarios";
+import { JargonText } from "@/components/glossary/JargonText";
 
 // ── Color config — all CSS variables ─────────────────────────────────────────
 
@@ -33,7 +34,6 @@ const TABS: TabDef[] = [
 ];
 
 // ── CIA config — CSS variables ────────────────────────────────────────────────
-// Note: SVG fill attributes need hex values, but these are used in HTML divs so variables work.
 
 const CIA_CONFIG: Record<CIAImpact, { label: string; color: string; bg: string; bdr: string }> = {
   availability:    { label: "Availability",    color: "var(--clay)", bg: "var(--clay-bg)", bdr: "var(--clay-bdr)" },
@@ -51,13 +51,13 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-function BulletList({ items, accent }: { items: string[]; accent: string }) {
+function BulletList({ items, accent, slug }: { items: string[]; accent: string; slug: string }) {
   return (
     <ul style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
       {items.map((item, i) => (
         <li key={i} style={{ display: "flex", gap: "12px", fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.7, color: "var(--text)" }}>
           <span style={{ marginTop: "7px", flexShrink: 0, width: "4px", height: "4px", background: accent }} />
-          <span>{item}</span>
+          <JargonText text={item} sourceScenario={slug} />
         </li>
       ))}
     </ul>
@@ -79,13 +79,28 @@ function CIABadge({ impact }: { impact: CIAImpact }) {
 
 // ── Tab renderers ─────────────────────────────────────────────────────────────
 
-function OverviewTab({ data, accent }: { data: ScenarioAnalysis["overview"]; accent: string }) {
+function OverviewTab({ data, accent, slug }: { data: ScenarioAnalysis["overview"]; accent: string; slug: string }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-      <Card><SectionLabel>What happened</SectionLabel><p style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.75, color: "var(--text)" }}>{data.what_happened}</p></Card>
+      <Card>
+        <SectionLabel>What happened</SectionLabel>
+        <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.75, color: "var(--text)" }}>
+          <JargonText text={data.what_happened} sourceScenario={slug} />
+        </p>
+      </Card>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-        <Card><SectionLabel>Scale & Impact</SectionLabel><p style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.7, color: "var(--text)" }}>{data.scale}</p></Card>
-        <Card><SectionLabel>Attribution</SectionLabel><p style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.7, color: "var(--text)" }}>{data.attribution}</p></Card>
+        <Card>
+          <SectionLabel>Scale & Impact</SectionLabel>
+          <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.7, color: "var(--text)" }}>
+            <JargonText text={data.scale} sourceScenario={slug} />
+          </p>
+        </Card>
+        <Card>
+          <SectionLabel>Attribution</SectionLabel>
+          <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.7, color: "var(--text)" }}>
+            <JargonText text={data.attribution} sourceScenario={slug} />
+          </p>
+        </Card>
       </div>
       <Card>
         <SectionLabel>Timeline</SectionLabel>
@@ -93,7 +108,9 @@ function OverviewTab({ data, accent }: { data: ScenarioAnalysis["overview"]; acc
           {data.timeline.map((ev: TimelineEvent, i: number) => (
             <div key={i} style={{ display: "flex", gap: "16px", padding: "10px 0", borderBottom: i < data.timeline.length - 1 ? "1px solid var(--border)" : "none" }}>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", width: "110px", flexShrink: 0, paddingTop: "2px", color: accent }}>{ev.date}</span>
-              <span style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.65, color: "var(--text)" }}>{ev.event}</span>
+              <span style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.65, color: "var(--text)" }}>
+                <JargonText text={ev.event} sourceScenario={slug} />
+              </span>
             </div>
           ))}
         </div>
@@ -102,68 +119,110 @@ function OverviewTab({ data, accent }: { data: ScenarioAnalysis["overview"]; acc
   );
 }
 
-function AnalystTab({ data, accent }: { data: ScenarioAnalysis["analyst"]; accent: string }) {
+function AnalystTab({ data, accent, slug }: { data: ScenarioAnalysis["analyst"]; accent: string; slug: string }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-      <Card><SectionLabel>Technical Summary</SectionLabel><p style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.75, color: "var(--text)" }}>{data.summary}</p></Card>
+      <Card>
+        <SectionLabel>Technical Summary</SectionLabel>
+        <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.75, color: "var(--text)" }}>
+          <JargonText text={data.summary} sourceScenario={slug} />
+        </p>
+      </Card>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-        <Card><SectionLabel>Detection Methods</SectionLabel><BulletList items={data.detection} accent={accent} /></Card>
-        <Card><SectionLabel>Indicators of Compromise</SectionLabel><BulletList items={data.iocs} accent={accent} /></Card>
+        <Card><SectionLabel>Detection Methods</SectionLabel><BulletList items={data.detection} accent={accent} slug={slug} /></Card>
+        <Card><SectionLabel>Indicators of Compromise</SectionLabel><BulletList items={data.iocs} accent={accent} slug={slug} /></Card>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-        <Card><SectionLabel>Response Gaps</SectionLabel><BulletList items={data.response_gaps} accent={accent} /></Card>
-        <Card><SectionLabel>Tools & Systems Implicated</SectionLabel><BulletList items={data.tools_implicated} accent={accent} /></Card>
-      </div>
-    </div>
-  );
-}
-
-function CommanderTab({ data, accent }: { data: ScenarioAnalysis["commander"]; accent: string }) {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-      <Card><SectionLabel>Executive Summary</SectionLabel><p style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.75, color: "var(--text)" }}>{data.summary}</p></Card>
-      <Card><SectionLabel>Critical Decision Points</SectionLabel><BulletList items={data.decisions} accent={accent} /></Card>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-        <Card><SectionLabel>Risk Framing</SectionLabel><p style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.7, color: "var(--text)" }}>{data.risk_framing}</p></Card>
-        <Card><SectionLabel>Disclosure</SectionLabel><p style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.7, color: "var(--text)" }}>{data.disclosure}</p></Card>
-      </div>
-      <Card><SectionLabel>Policy Impact</SectionLabel><p style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.75, color: "var(--text)" }}>{data.policy_impact}</p></Card>
-    </div>
-  );
-}
-
-function HCITab({ data, accent }: { data: ScenarioAnalysis["hci"]; accent: string }) {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-      <Card><SectionLabel>Human Factors Summary</SectionLabel><p style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.75, color: "var(--text)" }}>{data.summary}</p></Card>
-      <Card><SectionLabel>Cognitive Load Analysis</SectionLabel><p style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.75, color: "var(--text)" }}>{data.cognitive_load}</p></Card>
-      <Card><SectionLabel>Interface & UX Failures</SectionLabel><BulletList items={data.failures} accent={accent} /></Card>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-        <Card><SectionLabel>Design Questions</SectionLabel><BulletList items={data.design_questions} accent={accent} /></Card>
-        <Card><SectionLabel>Research Angles</SectionLabel><BulletList items={data.research_angles} accent={accent} /></Card>
+        <Card><SectionLabel>Response Gaps</SectionLabel><BulletList items={data.response_gaps} accent={accent} slug={slug} /></Card>
+        <Card><SectionLabel>Tools & Systems Implicated</SectionLabel><BulletList items={data.tools_implicated} accent={accent} slug={slug} /></Card>
       </div>
     </div>
   );
 }
 
-function DesignLessonsTab({ data, accent }: { data: ScenarioAnalysis["design_lessons"]; accent: string }) {
+function CommanderTab({ data, accent, slug }: { data: ScenarioAnalysis["commander"]; accent: string; slug: string }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-      <Card><SectionLabel>Summary</SectionLabel><p style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.75, color: "var(--text)" }}>{data.summary}</p></Card>
-      <Card><SectionLabel>Actionable Design Lessons</SectionLabel><BulletList items={data.lessons} accent={accent} /></Card>
-      <Card><SectionLabel>Pattern Connections</SectionLabel><BulletList items={data.pattern_connections} accent={accent} /></Card>
+      <Card>
+        <SectionLabel>Executive Summary</SectionLabel>
+        <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.75, color: "var(--text)" }}>
+          <JargonText text={data.summary} sourceScenario={slug} />
+        </p>
+      </Card>
+      <Card><SectionLabel>Critical Decision Points</SectionLabel><BulletList items={data.decisions} accent={accent} slug={slug} /></Card>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+        <Card>
+          <SectionLabel>Risk Framing</SectionLabel>
+          <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.7, color: "var(--text)" }}>
+            <JargonText text={data.risk_framing} sourceScenario={slug} />
+          </p>
+        </Card>
+        <Card>
+          <SectionLabel>Disclosure</SectionLabel>
+          <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.7, color: "var(--text)" }}>
+            <JargonText text={data.disclosure} sourceScenario={slug} />
+          </p>
+        </Card>
+      </div>
+      <Card>
+        <SectionLabel>Policy Impact</SectionLabel>
+        <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.75, color: "var(--text)" }}>
+          <JargonText text={data.policy_impact} sourceScenario={slug} />
+        </p>
+      </Card>
     </div>
   );
 }
 
-function IncidentTimelineTab({ data, accent }: { data: ScenarioAnalysis["incident_timeline"]; accent: string }) {
+function HCITab({ data, accent, slug }: { data: ScenarioAnalysis["hci"]; accent: string; slug: string }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+      <Card>
+        <SectionLabel>Human Factors Summary</SectionLabel>
+        <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.75, color: "var(--text)" }}>
+          <JargonText text={data.summary} sourceScenario={slug} />
+        </p>
+      </Card>
+      <Card>
+        <SectionLabel>Cognitive Load Analysis</SectionLabel>
+        <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.75, color: "var(--text)" }}>
+          <JargonText text={data.cognitive_load} sourceScenario={slug} />
+        </p>
+      </Card>
+      <Card><SectionLabel>Interface & UX Failures</SectionLabel><BulletList items={data.failures} accent={accent} slug={slug} /></Card>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+        <Card><SectionLabel>Design Questions</SectionLabel><BulletList items={data.design_questions} accent={accent} slug={slug} /></Card>
+        <Card><SectionLabel>Research Angles</SectionLabel><BulletList items={data.research_angles} accent={accent} slug={slug} /></Card>
+      </div>
+    </div>
+  );
+}
+
+function DesignLessonsTab({ data, accent, slug }: { data: ScenarioAnalysis["design_lessons"]; accent: string; slug: string }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+      <Card>
+        <SectionLabel>Summary</SectionLabel>
+        <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.75, color: "var(--text)" }}>
+          <JargonText text={data.summary} sourceScenario={slug} />
+        </p>
+      </Card>
+      <Card><SectionLabel>Actionable Design Lessons</SectionLabel><BulletList items={data.lessons} accent={accent} slug={slug} /></Card>
+      <Card><SectionLabel>Pattern Connections</SectionLabel><BulletList items={data.pattern_connections} accent={accent} slug={slug} /></Card>
+    </div>
+  );
+}
+
+function IncidentTimelineTab({ data, accent, slug }: { data: ScenarioAnalysis["incident_timeline"]; accent: string; slug: string }) {
   const [expanded, setExpanded] = useState<number | null>(0);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
       <Card>
         <SectionLabel>Incident Arc</SectionLabel>
-        <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.75, color: "var(--text)" }}>{data.summary}</p>
+        <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.75, color: "var(--text)" }}>
+          <JargonText text={data.summary} sourceScenario={slug} />
+        </p>
       </Card>
 
       <div style={{ position: "relative" }}>
@@ -198,7 +257,9 @@ function IncidentTimelineTab({ data, accent }: { data: ScenarioAnalysis["inciden
 
                   {isExpanded && (
                     <div style={{ padding: "0 16px 16px", borderTop: "1px solid var(--border)" }}>
-                      <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.75, color: "var(--text)", marginTop: "14px", marginBottom: "14px" }}>{stage.description}</p>
+                      <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: 1.75, color: "var(--text)", marginTop: "14px", marginBottom: "14px" }}>
+                        <JargonText text={stage.description} sourceScenario={slug} />
+                      </p>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "14px" }}>
                         <div>
                           <SectionLabel>Who was involved</SectionLabel>
@@ -213,13 +274,15 @@ function IncidentTimelineTab({ data, accent }: { data: ScenarioAnalysis["inciden
                         <div>
                           <SectionLabel>Key action</SectionLabel>
                           <p style={{ fontFamily: "var(--font-body)", fontSize: "12px", lineHeight: 1.65, color: "var(--text)", padding: "8px 12px", background: `${accent}10`, borderLeft: `2px solid ${accent}` }}>
-                            {stage.key_action}
+                            <JargonText text={stage.key_action} sourceScenario={slug} />
                           </p>
                         </div>
                       </div>
                       <div style={{ marginBottom: "14px" }}>
                         <SectionLabel>How awareness spread</SectionLabel>
-                        <p style={{ fontFamily: "var(--font-body)", fontSize: "12px", lineHeight: 1.65, color: "var(--text)" }}>{stage.how_spread}</p>
+                        <p style={{ fontFamily: "var(--font-body)", fontSize: "12px", lineHeight: 1.65, color: "var(--text)" }}>
+                          <JargonText text={stage.how_spread} sourceScenario={slug} />
+                        </p>
                       </div>
                       <div>
                         <SectionLabel>CIA impact at this stage</SectionLabel>
@@ -354,7 +417,7 @@ export default function ScenarioDetailPage() {
           const isActive = activeTab === tab.id;
           return (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              style={{ flexShrink: 0, padding: "10px 16px", fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.12em", textTransform: "uppercase", color: isActive ? tab.accent : "var(--text-dim)", borderBottom: isActive ? `2px solid ${tab.accent}` : "2px solid transparent", marginBottom: "-1px", background: "transparent", border: "none", borderBottomStyle: "solid", borderBottomWidth: "2px", borderBottomColor: isActive ? tab.accent : "transparent", cursor: "pointer", transition: "color 0.12s" }}>
+              style={{ flexShrink: 0, padding: "10px 16px", fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.12em", textTransform: "uppercase", color: isActive ? tab.accent : "var(--text-dim)", borderTop: "none", borderLeft: "none", borderRight: "none", borderBottom: `2px solid ${isActive ? tab.accent : "transparent"}`, marginBottom: "-1px", background: "transparent", cursor: "pointer", transition: "color 0.12s" }}>
               {tab.label}
             </button>
           );
@@ -371,14 +434,14 @@ export default function ScenarioDetailPage() {
         </div>
       ) : analysis ? (
         <div>
-          {activeTab === "overview"          && <OverviewTab         data={analysis.overview}          accent={activeTabDef.accent} />}
-          {activeTab === "analyst"           && <AnalystTab          data={analysis.analyst}           accent={activeTabDef.accent} />}
-          {activeTab === "commander"         && <CommanderTab        data={analysis.commander}         accent={activeTabDef.accent} />}
-          {activeTab === "hci"               && <HCITab              data={analysis.hci}               accent={activeTabDef.accent} />}
-          {activeTab === "design_lessons"    && <DesignLessonsTab    data={analysis.design_lessons}    accent={activeTabDef.accent} />}
+          {activeTab === "overview"          && <OverviewTab         data={analysis.overview}          accent={activeTabDef.accent} slug={slug} />}
+          {activeTab === "analyst"           && <AnalystTab          data={analysis.analyst}           accent={activeTabDef.accent} slug={slug} />}
+          {activeTab === "commander"         && <CommanderTab        data={analysis.commander}         accent={activeTabDef.accent} slug={slug} />}
+          {activeTab === "hci"               && <HCITab              data={analysis.hci}               accent={activeTabDef.accent} slug={slug} />}
+          {activeTab === "design_lessons"    && <DesignLessonsTab    data={analysis.design_lessons}    accent={activeTabDef.accent} slug={slug} />}
           {activeTab === "incident_timeline" && (
             analysis.incident_timeline ? (
-              <IncidentTimelineTab data={analysis.incident_timeline} accent={activeTabDef.accent} />
+              <IncidentTimelineTab data={analysis.incident_timeline} accent={activeTabDef.accent} slug={slug} />
             ) : (
               <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", padding: "24px" }}>
                 <p style={{ fontFamily: "var(--font-mono)", fontSize: "8px", letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--text-dim)", marginBottom: "8px" }}>Timeline not available</p>

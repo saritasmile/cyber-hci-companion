@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { scenarios } from "@/lib/scenarios";
 import { resources } from "@/lib/resources";
@@ -115,20 +116,20 @@ function PulseStrip() {
       <div style={{ border: "1px solid var(--border)", backgroundColor: "var(--bg-card)" }}>
         {display.map((item, i) => {
           const dot = LENS_DOT[item.lens] ?? LENS_DOT.default;
+          const Tag = item.url ? "a" : "div";
           return (
-            <a
+            <Tag
               key={item.id}
-              href={item.url ?? "#"}
-              target={item.url ? "_blank" : undefined}
-              rel="noopener noreferrer"
+              {...(item.url ? { href: item.url, target: "_blank", rel: "noopener noreferrer" } : {})}
               style={{
                 display: "flex", alignItems: "center", gap: "14px",
                 padding: "12px 18px",
                 borderBottom: i < display.length - 1 ? "1px solid var(--border)" : "none",
                 textDecoration: "none", transition: "background 0.1s",
+                cursor: item.url ? "pointer" : "default",
               }}
-              onMouseEnter={e => (e.currentTarget.style.background = "var(--bg-hover)")}
-              onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+              onMouseEnter={item.url ? (e: React.MouseEvent<HTMLElement>) => (e.currentTarget.style.background = "var(--bg-hover)") : undefined}
+              onMouseLeave={item.url ? (e: React.MouseEvent<HTMLElement>) => (e.currentTarget.style.background = "transparent") : undefined}
             >
               <span style={{ width: "4px", height: "4px", backgroundColor: dot, flexShrink: 0 }} />
               <span style={{ fontSize: "13px", color: "var(--text)", flex: 1, lineHeight: 1.45 }}>
@@ -144,7 +145,7 @@ function PulseStrip() {
               }}>
                 {item.effort}
               </span>
-            </a>
+            </Tag>
           );
         })}
       </div>
@@ -248,12 +249,24 @@ function SessionCards({ recentTopics }: { recentTopics: string[] }) {
 
 // ── Session generator ─────────────────────────────────────────────────────────
 
+interface GeneratedSession {
+  id: string;
+  title: string;
+  description: string;
+  type: "ai";
+  duration: string;
+  item_count: number;
+  items: { id: string; type: string; title: string; author?: string; description: string; url: string; duration: string; reason?: string }[];
+}
+
 function SessionGenerator() {
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [time, setTime] = useState<"15" | "60" | null>(null);
   const [focused, setFocused] = useState(false);
   const [generating, setGenerating] = useState(false);
-  const [result, setResult] = useState<{ title: string; meta: string; items: { label: string; type: string; duration: string }[] } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<GeneratedSession | null>(null);
 
   const isReady = query.trim().length > 3 && time !== null;
 
@@ -261,18 +274,24 @@ function SessionGenerator() {
     if (!isReady) return;
     setGenerating(true);
     setResult(null);
-    // Simulate generation — in production this would call /api/sessions/generate
-    await new Promise(r => setTimeout(r, 1600));
-    setResult({
-      title: query,
-      meta: `3 items · ~17 min · ${time === "15" ? "15-min" : "1-hour"} session`,
-      items: [
-        { label: "Overview and key concepts", type: "Article", duration: "5 min" },
-        { label: "Deep-dive video explainer", type: "Video", duration: "10 min" },
-        { label: "Related design pattern", type: "Pattern", duration: "4 min" },
-      ],
-    });
-    setGenerating(false);
+    setError(null);
+    try {
+      const res = await fetch("/api/sessions/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query, time }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? `HTTP ${res.status}`);
+      }
+      const session = await res.json() as GeneratedSession;
+      setResult(session);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Generation failed.");
+    } finally {
+      setGenerating(false);
+    }
   }, [isReady, query, time]);
 
   const prompts = [
@@ -352,21 +371,31 @@ function SessionGenerator() {
       {!generating && !result && (
         <div style={{ borderTop: `1px solid ${seam}`, padding: "10px 20px", display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
           <span style={{ fontFamily: "var(--font-mono)", fontSize: "8px", letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--text-dim)", flexShrink: 0 }}>Try</span>
-          {prompts.map(p => (
-            <button
-              key={p}
-              onClick={() => setQuery(p)}
-              style={{
-                fontFamily: "var(--font-mono)", fontSize: "9px", padding: "3px 10px",
-                border: `1px solid ${seam}`, background: "transparent",
-                color: "var(--text-mid)", cursor: "pointer", transition: "all 0.1s",
-              }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--pool-bdr)"; e.currentTarget.style.color = "var(--pool)"; e.currentTarget.style.background = "var(--pool-bg)"; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = seam; e.currentTarget.style.color = "var(--text-mid)"; e.currentTarget.style.background = "transparent"; }}
-            >
-              {p}
-            </button>
-          ))}
+          {prompts.map((p, i) => {
+            // Cycle through palette accent colors for visual variety
+            const chipColors = [
+              { color: "var(--pool)", border: "var(--pool-bdr)", bg: "var(--pool-bg)" },
+              { color: "var(--leaf)", border: "var(--leaf-bdr)", bg: "var(--leaf-bg)" },
+              { color: "var(--clay)", border: "var(--clay-bdr)", bg: "var(--clay-bg)" },
+              { color: "var(--oak)",  border: "var(--oak-bdr)",  bg: "var(--oak-bg)"  },
+            ];
+            const chip = chipColors[i % chipColors.length];
+            return (
+              <button
+                key={p}
+                onClick={() => setQuery(p)}
+                style={{
+                  fontFamily: "var(--font-mono)", fontSize: "11px", padding: "4px 12px",
+                  border: `1px solid ${chip.border}`, background: chip.bg,
+                  color: chip.color, cursor: "pointer", transition: "all 0.1s",
+                }}
+                onMouseEnter={e => { e.currentTarget.style.opacity = "0.8"; }}
+                onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
+              >
+                {p}
+              </button>
+            );
+          })}
         </div>
       )}
 
@@ -385,28 +414,48 @@ function SessionGenerator() {
         </div>
       )}
 
+      {/* Error */}
+      {error && (
+        <div style={{ borderTop: `1px solid ${seam}`, padding: "14px 20px" }}>
+          <p style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--clay)" }}>{error}</p>
+        </div>
+      )}
+
       {/* Result */}
       {result && (
         <div style={{ borderTop: `1px solid ${seam}`, padding: "22px" }}>
           <p style={{ fontSize: "15px", fontWeight: 500, color: "var(--text)", marginBottom: "4px" }}>{result.title}</p>
-          <p style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--text-dim)", marginBottom: "16px" }}>{result.meta}</p>
+          <p style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--text-dim)", marginBottom: "16px" }}>{result.item_count} items · {result.duration}</p>
           <div style={{ display: "flex", flexDirection: "column", gap: "1px", background: "var(--border)", marginBottom: "18px" }}>
             {result.items.map((item, i) => (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 14px", background: "var(--bg-hover)" }}>
                 <span style={{ width: "2px", height: "16px", background: oak, flexShrink: 0 }} />
-                <span style={{ flex: 1, fontSize: "12px", color: "var(--text)" }}>{item.label}</span>
+                <span style={{ flex: 1, fontSize: "12px", color: "var(--text)" }}>{item.title}</span>
                 <span style={{ fontFamily: "var(--font-mono)", fontSize: "8px", color: "var(--text-dim)" }}>{item.type} · {item.duration}</span>
               </div>
             ))}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <Link href="/sessions" style={{
-              padding: "9px 22px", background: "var(--text)", color: "var(--bg)",
-              fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.14em",
-              textTransform: "uppercase", textDecoration: "none",
-            }}>
+            <button
+              onClick={() => {
+                if (result) {
+                  sessionStorage.setItem("pendingSession", JSON.stringify(result));
+                  const saved = JSON.parse(localStorage.getItem("customSessions") ?? "[]") as GeneratedSession[];
+                  const alreadySaved = saved.some(s => s.id === result.id);
+                  if (!alreadySaved) {
+                    localStorage.setItem("customSessions", JSON.stringify([result, ...saved].slice(0, 20)));
+                  }
+                }
+                router.push("/sessions");
+              }}
+              style={{
+                padding: "9px 22px", background: "var(--text)", color: "var(--bg)",
+                fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.14em",
+                textTransform: "uppercase", border: "none", cursor: "pointer",
+              }}
+            >
               Start session →
-            </Link>
+            </button>
             <button
               onClick={() => { setResult(null); setGenerating(false); }}
               style={{ padding: "9px 14px", background: "transparent", border: `1px solid ${seam}`, fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--text-mid)", cursor: "pointer" }}
@@ -428,14 +477,13 @@ function SessionGenerator() {
 
 // ── Progress zone ─────────────────────────────────────────────────────────────
 
-function ProgressZone() {
+function ProgressZone({ user }: { user: { id: string } | null }) {
   const [recent, setRecent] = useState<RecentEntry[]>([]);
   const [saved, setSaved] = useState<{ id: string; title: string; type: string; status: ResourceStatus }[]>([]);
   const [inProgress, setInProgress] = useState<{ id: string; title: string; type: string }[]>([]);
 
   useEffect(() => {
     async function load() {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       // Recent scenarios
@@ -555,10 +603,12 @@ function ProgressZone() {
 
 export default function Home() {
   const [recentTopics, setRecentTopics] = useState<string[]>([]);
+  const [user, setUser] = useState<{ id: string } | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) return;
+      setUser(user);
       const { data } = await supabase
         .from("knowledge_map_entries")
         .select("topic")
@@ -603,7 +653,7 @@ export default function Home() {
       </div>
 
       {/* Progress */}
-      <ProgressZone />
+      <ProgressZone user={user} />
 
       {/* Keyframe for spinner */}
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>

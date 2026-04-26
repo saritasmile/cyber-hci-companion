@@ -43,16 +43,27 @@ const CURATED_SESSIONS: Session[] = [
   },
 ];
 
+type ViabilityIssue = "broken" | "unavailable" | "other";
+
 function SessionPlayer({ session, onClose }: { session: Session; onClose: () => void; }) {
   const [current, setCurrent] = useState(0);
+  const [items, setItems] = useState<SessionItem[]>(session.items);
   const [reactions, setReactions] = useState<Reaction[]>(session.items.map(() => null));
   const [saved, setSaved] = useState(session.saved ?? false);
   const [showEnd, setShowEnd] = useState(false);
   const [savedItems, setSavedItems] = useState<Set<string>>(new Set());
 
-  const item = session.items[current];
+  // Viability state
+  const [viabilityFlags, setViabilityFlags] = useState<Record<number, ViabilityIssue>>({});
+  const [showFlagPanel, setShowFlagPanel] = useState(false);
+  const [selectedIssue, setSelectedIssue] = useState<ViabilityIssue | null>(null);
+  const [replacing, setReplacing] = useState(false);
+  const [replacedIndices, setReplacedIndices] = useState<Set<number>>(new Set());
+  const [replaceError, setReplaceError] = useState<string | null>(null);
+
+  const item = items[current];
   const reacted = reactions.filter(r => r !== null).length;
-  const isLast = current === session.items.length - 1;
+  const isLast = current === items.length - 1;
 
   const react = (idx: number, type: Reaction) => {
     setReactions(prev => { const next = [...prev]; next[idx] = prev[idx] === type ? null : type; return next; });
@@ -63,6 +74,64 @@ function SessionPlayer({ session, onClose }: { session: Session; onClose: () => 
   };
 
   const reactionIcon = (r: Reaction) => r === "like" ? "👍" : r === "dislike" ? "👎" : r === "skip" ? "→" : "";
+
+  const flagCurrentItem = (issue: ViabilityIssue) => {
+    setViabilityFlags(prev => ({ ...prev, [current]: issue }));
+    setSelectedIssue(issue);
+  };
+
+  const openFlagPanel = () => {
+    setShowFlagPanel(true);
+    setSelectedIssue(viabilityFlags[current] ?? null);
+    setReplaceError(null);
+  };
+
+  const closeFlagPanel = () => {
+    setShowFlagPanel(false);
+    setSelectedIssue(null);
+    setReplaceError(null);
+  };
+
+  const navigateTo = (idx: number) => {
+    setCurrent(idx);
+    setShowFlagPanel(false);
+    setSelectedIssue(null);
+    setReplaceError(null);
+  };
+
+  const requestReplacement = async () => {
+    setReplacing(true);
+    setReplaceError(null);
+    try {
+      const excludeIds = items.map(it => it.id);
+      const excludeUrls = items.map(it => it.url);
+      const res = await fetch("/api/sessions/replace", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          item,
+          sessionTitle: session.title,
+          sessionDescription: session.description,
+          excludeIds,
+          excludeUrls,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error((err as { error?: string }).error ?? "Request failed");
+      }
+      const replacement = await res.json() as SessionItem;
+      setItems(prev => { const next = [...prev]; next[current] = replacement; return next; });
+      setViabilityFlags(prev => { const next = { ...prev }; delete next[current]; return next; });
+      setReplacedIndices(prev => new Set(prev).add(current));
+      setShowFlagPanel(false);
+      setSelectedIssue(null);
+    } catch (err) {
+      setReplaceError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setReplacing(false);
+    }
+  };
 
   return (
     <div style={{ display: "flex", flex: 1, height: "100%", minHeight: 0 }}>
@@ -88,10 +157,60 @@ function SessionPlayer({ session, onClose }: { session: Session; onClose: () => 
 
         <p style={{ fontFamily: "var(--font-body)", fontSize: "14px", color: "var(--text)", lineHeight: 1.8, marginBottom: "20px" }}>{item.description}</p>
 
-        <a href={item.url} target="_blank" rel="noopener noreferrer"
-          style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--pool)", borderBottom: "1px solid var(--pool-bdr)", paddingBottom: "1px", textDecoration: "none" }}>
-          Open resource ↗
-        </a>
+        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+          <a href={item.url} target="_blank" rel="noopener noreferrer"
+            style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--pool)", borderBottom: "1px solid var(--pool-bdr)", paddingBottom: "1px", textDecoration: "none" }}>
+            Open resource ↗
+          </a>
+          {replacedIndices.has(current) && (
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: "8px", color: "var(--leaf)", letterSpacing: "0.1em" }}>↺ Replaced</span>
+          )}
+          {!replacedIndices.has(current) && (
+            <button onClick={showFlagPanel ? closeFlagPanel : openFlagPanel}
+              style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "var(--font-mono)", fontSize: "8px", letterSpacing: "0.1em", color: viabilityFlags[current] ? "var(--clay)" : "var(--text-dim)", padding: 0, transition: "color 0.12s" }}
+              onMouseEnter={e => (e.currentTarget.style.color = viabilityFlags[current] ? "var(--clay)" : "var(--text)")}
+              onMouseLeave={e => (e.currentTarget.style.color = viabilityFlags[current] ? "var(--clay)" : "var(--text-dim)")}>
+              {viabilityFlags[current] ? "⚠ Issue flagged" : "Flag issue"}
+            </button>
+          )}
+        </div>
+
+        {/* Viability flag panel */}
+        {showFlagPanel && (
+          <div style={{ marginTop: "16px", padding: "14px 16px", background: "var(--bg-card)", border: "1px solid var(--clay-bdr)" }}>
+            <p style={{ fontFamily: "var(--font-mono)", fontSize: "8px", letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--clay)", marginBottom: "10px" }}>
+              Report a viability issue
+            </p>
+            <div style={{ display: "flex", gap: "6px", marginBottom: "12px" }}>
+              {(["broken", "unavailable", "other"] as ViabilityIssue[]).map(issue => (
+                <button key={issue} onClick={() => flagCurrentItem(issue)}
+                  style={{
+                    padding: "5px 11px", fontFamily: "var(--font-mono)", fontSize: "8px", letterSpacing: "0.08em", cursor: "pointer", transition: "all 0.12s",
+                    border: `1px solid ${selectedIssue === issue ? "var(--clay-bdr)" : "var(--border)"}`,
+                    background: selectedIssue === issue ? "var(--clay-bg)" : "transparent",
+                    color: selectedIssue === issue ? "var(--clay)" : "var(--text-dim)",
+                  }}>
+                  {issue === "broken" ? "Link broken" : issue === "unavailable" ? "Content unavailable" : "Other issue"}
+                </button>
+              ))}
+            </div>
+            {replaceError && (
+              <p style={{ fontFamily: "var(--font-mono)", fontSize: "8px", color: "var(--clay)", marginBottom: "8px" }}>{replaceError}</p>
+            )}
+            {selectedIssue && (
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <button onClick={requestReplacement} disabled={replacing}
+                  style={{ padding: "7px 14px", background: replacing ? "var(--border)" : "var(--text)", color: replacing ? "var(--text-dim)" : "var(--bg)", border: "none", fontFamily: "var(--font-mono)", fontSize: "8px", letterSpacing: "0.12em", textTransform: "uppercase", cursor: replacing ? "default" : "pointer", transition: "all 0.12s" }}>
+                  {replacing ? "Finding replacement…" : "Get replacement →"}
+                </button>
+                <button onClick={closeFlagPanel}
+                  style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "var(--font-mono)", fontSize: "8px", color: "var(--text-dim)", padding: 0 }}>
+                  Cancel
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Reaction bar */}
         <div style={{ display: "flex", alignItems: "center", gap: "8px", paddingTop: "20px", marginTop: "20px", borderTop: "1px solid var(--border)" }}>
@@ -113,9 +232,9 @@ function SessionPlayer({ session, onClose }: { session: Session; onClose: () => 
             {savedItems.has(item.id) ? "✓ Saved" : "+ Save"}
           </button>
           <span style={{ flex: 1 }} />
-          <button onClick={() => { if (isLast) setShowEnd(true); else setCurrent(c => c + 1); }}
+          <button onClick={() => { if (isLast) setShowEnd(true); else navigateTo(current + 1); }}
             style={{ display: "flex", alignItems: "center", gap: "7px", padding: "8px 16px", background: "var(--text)", color: "var(--bg)", border: "none", fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.12em", textTransform: "uppercase", cursor: "pointer" }}>
-            {isLast ? "Finish session →" : `Next — ${session.items[current + 1]?.type} →`}
+            {isLast ? "Finish session →" : `Next — ${items[current + 1]?.type} →`}
           </button>
         </div>
 
@@ -125,7 +244,7 @@ function SessionPlayer({ session, onClose }: { session: Session; onClose: () => 
               Session complete <span style={{ flex: 1, height: "1px", backgroundColor: "var(--border)" }} />
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "24px" }}>
-              {session.items.map((it, i) => (
+              {items.map((it, i) => (
                 <div key={it.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 14px", background: "var(--bg-card)", border: "1px solid var(--border)" }}>
                   <span style={{ fontSize: "13px", width: "20px" }}>{reactionIcon(reactions[i]) || "·"}</span>
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: "8px", color: "var(--oak)", textTransform: "uppercase", width: "64px", flexShrink: 0 }}>{it.type}</span>
@@ -178,12 +297,14 @@ function SessionPlayer({ session, onClose }: { session: Session; onClose: () => 
         </div>
 
         <div style={{ flex: 1 }}>
-          {session.items.map((it, idx) => {
+          {items.map((it, idx) => {
             const r = reactions[idx];
             const isActive = idx === current;
-            const borderColor = r === "like" ? "var(--leaf)" : r === "dislike" ? "var(--clay)" : r === "skip" ? "var(--border-hi)" : "transparent";
+            const isFlagged = !!viabilityFlags[idx];
+            const isReplaced = replacedIndices.has(idx);
+            const borderColor = isFlagged ? "var(--clay)" : isReplaced ? "var(--leaf)" : r === "like" ? "var(--leaf)" : r === "dislike" ? "var(--clay)" : r === "skip" ? "var(--border-hi)" : "transparent";
             return (
-              <div key={it.id} onClick={() => setCurrent(idx)}
+              <div key={`${it.id}-${idx}`} onClick={() => navigateTo(idx)}
                 style={{ display: "flex", alignItems: "flex-start", gap: "9px", padding: "9px 16px", cursor: "pointer", borderLeft: `2px solid ${isActive ? "var(--oak)" : borderColor}`, background: isActive ? "var(--bg-subtle)" : "transparent", transition: "background 0.1s" }}
                 onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = "var(--bg-subtle)"; }}
                 onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = "transparent"; }}>
@@ -191,7 +312,12 @@ function SessionPlayer({ session, onClose }: { session: Session; onClose: () => 
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ fontFamily: "var(--font-mono)", fontSize: "8px", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--oak)", marginBottom: "2px" }}>{it.type}</p>
                   <p style={{ fontFamily: "var(--font-body)", fontSize: "12px", fontWeight: 500, color: "var(--text)", lineHeight: 1.3, marginBottom: "2px" }}>{it.title}</p>
-                  <p style={{ fontFamily: "var(--font-mono)", fontSize: "8px", color: "var(--text-dim)" }}>{it.duration}{r ? ` · ${reactionIcon(r)}` : ""}</p>
+                  <p style={{ fontFamily: "var(--font-mono)", fontSize: "8px", color: "var(--text-dim)" }}>
+                    {it.duration}
+                    {r ? ` · ${reactionIcon(r)}` : ""}
+                    {isFlagged ? " · ⚠" : ""}
+                    {isReplaced ? " · ↺" : ""}
+                  </p>
                 </div>
               </div>
             );
@@ -211,13 +337,24 @@ function SessionPlayer({ session, onClose }: { session: Session; onClose: () => 
 
 export default function SessionsPage() {
   const [activeSession, setActiveSession] = useState<Session | null>(null);
+  const [customSessions, setCustomSessions] = useState<Session[]>([]);
 
-  useEffect(() => {}, []);
+  useEffect(() => {
+    const pending = sessionStorage.getItem("pendingSession");
+    if (pending) {
+      sessionStorage.removeItem("pendingSession");
+      try { setActiveSession(JSON.parse(pending) as Session); } catch { /* ignore */ }
+    }
+    try {
+      const stored = JSON.parse(localStorage.getItem("customSessions") ?? "[]") as Session[];
+      setCustomSessions(stored);
+    } catch { /* ignore */ }
+  }, []);
 
   if (activeSession) {
     return (
       <div style={{ display: "flex", flex: 1, height: "100vh", overflow: "hidden" }}>
-        <div style={{ position: "fixed", top: 0, left: "220px", right: 0, height: "52px", zIndex: 100, background: "var(--bg-card)", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: "16px", padding: "0 24px" }}>
+        <div style={{ position: "fixed", top: 0, left: "256px", right: 0, height: "52px", zIndex: 100, background: "var(--bg-card)", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: "16px", padding: "0 24px" }}>
           <button onClick={() => setActiveSession(null)}
             style={{ fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-dim)", background: "none", border: "none", cursor: "pointer" }}>
             ← Sessions
@@ -281,6 +418,45 @@ export default function SessionsPage() {
           ))}
         </div>
       </div>
+
+      {customSessions.length > 0 && (
+        <div style={{ marginBottom: "44px" }}>
+          <p className="eyebrow" style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            Your sessions <span style={{ flex: 1, height: "1px", backgroundColor: "var(--border)" }} />
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: "1px", background: "var(--border)" }}>
+            {customSessions.map(session => (
+              <div key={session.id}
+                style={{ background: "var(--bg-card)", padding: "22px 24px", cursor: "pointer", position: "relative", transition: "background 0.12s" }}
+                onClick={() => setActiveSession(session)}
+                onMouseEnter={e => (e.currentTarget.style.background = "var(--bg-hover)")}
+                onMouseLeave={e => (e.currentTarget.style.background = "var(--bg-card)")}>
+                <div style={{ position: "absolute", top: 0, left: 0, bottom: 0, width: "3px", background: "var(--pool)" }} />
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "24px" }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
+                      <span style={{ fontFamily: "var(--font-mono)", fontSize: "8px", letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--text-dim)" }}>
+                        AI · {session.duration} · {session.item_count} items
+                      </span>
+                    </div>
+                    <p style={{ fontFamily: "var(--font-body)", fontSize: "15px", fontWeight: 500, color: "var(--text)", lineHeight: 1.3, marginBottom: "6px" }}>{session.title}</p>
+                    <p style={{ fontFamily: "var(--font-body)", fontSize: "12px", color: "var(--text)", lineHeight: 1.65 }}>{session.description}</p>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "12px" }}>
+                      {session.items.slice(0, 3).map(item => (
+                        <span key={item.id} style={{ fontFamily: "var(--font-mono)", fontSize: "8px", padding: "2px 7px", border: "1px solid var(--border)", color: "var(--text-dim)", background: "var(--bg-subtle)" }}>
+                          {item.type} · {item.duration}
+                        </span>
+                      ))}
+                      {session.items.length > 3 && <span style={{ fontFamily: "var(--font-mono)", fontSize: "8px", color: "var(--text-dim)" }}>+{session.items.length - 3} more</span>}
+                    </div>
+                  </div>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--pool)", flexShrink: 0 }}>Start →</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div>
         <p className="eyebrow" style={{ display: "flex", alignItems: "center", gap: "12px" }}>

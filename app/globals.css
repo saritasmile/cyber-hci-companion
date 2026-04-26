@@ -2,10 +2,42 @@
 @import "tailwindcss";
 
 @theme {
+  /* Registering DM Sans as --font-sans overrides Tailwind v4's default font stack */
+  --font-sans:    "DM Sans", system-ui, sans-serif;
   --font-heading: "DM Sans", system-ui, sans-serif;
   --font-body:    "DM Sans", system-ui, sans-serif;
   --font-ui:      "DM Sans", system-ui, sans-serif;
   --font-mono:    "DM Mono", "Courier New", monospace;
+
+  /* Default text color — overrides Tailwind's gray-900 default */
+  --default-font-family: "DM Sans", system-ui, sans-serif;
+  --default-font-size: 15px;
+  --default-line-height: 1.65;
+}
+
+@layer base {
+  html, body {
+    font-family: "DM Sans", system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.65;
+    color: var(--text);
+    background-color: var(--bg);
+  }
+  p, li, span, td, th, label, input, textarea, select, button {
+    font-family: "DM Sans", system-ui, sans-serif;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "DM Sans", system-ui, sans-serif;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.2;
+  }
+  a {
+    color: var(--pool);
+    text-decoration: none;
+    transition: color 0.12s;
+  }
+  a:hover { color: var(--pool-light); }
 }
 
 /* ── Design tokens ─────────────────────────────────────────────────────────── */
@@ -20,11 +52,11 @@
 
   /* ── Sidebar ── */
   --sidebar-bg:     #2e6878;   /* lagoon pool blue */
-  --sidebar-text:   #a8d8e8;   /* light pool text */
-  --sidebar-dim:    #6aaabb;   /* recessed label */
-  --sidebar-active: #d4eef5;   /* active nav item */
-  --sidebar-bdr:    rgba(255,255,255,0.12);   /* hairline seam */
-  --sidebar-hover:  rgba(255,255,255,0.1);    /* hover surface */
+  --sidebar-text:   #e8f6fa;   /* nav item text — near white */
+  --sidebar-dim:    #e0f2f8;   /* eyebrows/labels — near white, legible at small sizes */
+  --sidebar-active: #ffffff;   /* active nav item — pure white */
+  --sidebar-bdr:    rgba(255,255,255,0.2);    /* hairline seam */
+  --sidebar-hover:  rgba(255,255,255,0.14);   /* hover surface */
 
   /* ── Borders — warm seam lines ── */
   --border:         #ddd0b8;   /* warm joint lines */
@@ -34,8 +66,8 @@
   /* ── Text — high contrast, warm ── */
   --text:           #141210;   /* near-black — headings, primary content */
   --text-mid:       #3a3528;   /* body copy — warm dark brown, strong contrast */
-  --text-dim:       #6a6050;   /* secondary labels — recessed but readable */
-  --text-xdim:      #8a7e6e;   /* hints, placeholders, timestamps */
+  --text-dim:       #3e3022;   /* secondary labels — dark enough for small uppercase */
+  --text-xdim:      #5a4e3a;   /* hints, placeholders, timestamps */
 
   /* ── Oak — warm honey wood ── */
   --oak:            #b8822a;   /* richer, more saturated */
@@ -91,43 +123,13 @@
 
 /* ── Base ──────────────────────────────────────────────────────────────────── */
 
-*, *::before, *::after {
-  box-sizing: border-box;
-}
+*, *::before, *::after { box-sizing: border-box; }
 
 html {
-  background-color: var(--bg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
-
-body {
-  background-color: var(--bg);
-  color: var(--text);
-  font-family: var(--font-body);
-  font-size: 14px;
-  line-height: 1.65;
-}
-
-/* Ensure all text elements inherit the body font unless explicitly overridden */
-p, li, span, td, th, label, input, textarea, select, button {
-  font-family: inherit;
-}
-
-/* Headings use the heading font — override where needed */
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-heading);
-  color: var(--text);
-  line-height: 1.2;
-}
-
-a {
-  color: var(--pool);
-  text-decoration: none;
-  transition: color 0.12s;
-}
-a:hover { color: var(--pool-light); }
 
 /* ── Sidebar — board-formed dark concrete ──────────────────────────────────── */
 /*
@@ -144,8 +146,8 @@ a:hover { color: var(--pool-light); }
 
 .sidebar-eyebrow {
   font-family: var(--font-mono);
-  font-size: 7.5px;
-  letter-spacing: 0.32em;
+  font-size: 10px;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--sidebar-dim);
   padding: 0 20px;
@@ -312,8 +314,8 @@ a:hover { color: var(--pool-light); }
 
 .stat-label {
   font-family: var(--font-mono);
-  font-size: 7.5px;
-  letter-spacing: 0.24em;
+  font-size: 10px;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--text-xdim);
   margin-top: 4px;
@@ -372,8 +374,8 @@ a:hover { color: var(--pool-light); }
 
 .eyebrow {
   font-family: var(--font-mono);
-  font-size: 7.5px;
-  letter-spacing: 0.32em;
+  font-size: 10px;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--text-dim);
   margin-bottom: 10px;
@@ -382,7 +384,7 @@ a:hover { color: var(--pool-light); }
 .page-title {
   font-family: var(--font-heading);
   font-size: 26px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text);
   letter-spacing: -0.025em;
   line-height: 1.15;
@@ -420,8 +422,8 @@ a:hover { color: var(--pool-light); }
 /* Sub-section heading — monospace eyebrow */
 .ssh {
   font-family: var(--font-mono);
-  font-size: 7.5px;
-  letter-spacing: 0.26em;
+  font-size: 10px;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--text-dim);
   margin-bottom: 10px;

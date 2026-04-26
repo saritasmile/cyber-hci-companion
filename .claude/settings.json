@@ -3,7 +3,12 @@
     "allow": [
       "Bash(npm run:*)",
       "Bash(ls -la /Users/skbielagus/Projects/cyber-hci-companion/.env*)",
-      "Bash(head -1 /Users/skbielagus/Projects/cyber-hci-companion/app/scenarios/[slug]/page.tsx)"
+      "Bash(head -1 /Users/skbielagus/Projects/cyber-hci-companion/app/scenarios/[slug]/page.tsx)",
+      "Bash(find /Users/skbielagus/Projects/cyber-hci-companion/app/soc-examples -type f -name *.tsx -o -name *.ts -o -name *.json)",
+      "Read(//Users/skbielagus/Projects/**)"
+    ],
+    "additionalDirectories": [
+      "/Users/skbielagus/Projects/cyber-hci-companion/app/api"
     ]
   }
 }
