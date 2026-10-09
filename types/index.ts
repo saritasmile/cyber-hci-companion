@@ -6,6 +6,8 @@ export type Module =
   | "knowledge-map"
   | "learning-resources"
   | "sessions"
+  | "industry-intel"
+  | "soc-examples"
   | "glossary";
 
 export type AccentColor = "analyst" | "hci" | "commander" | "research" | "gold";

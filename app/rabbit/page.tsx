@@ -7,7 +7,8 @@ import { supabase } from "@/lib/supabase";
 
 interface RabbitResult { summary: string; analyst_note: string; hci_note: string; related: string[]; rabbit: string; }
 interface TrailEntry { keyword: string; result: RabbitResult; }
-interface Bookmark { topic: string; type: "topic" | "related" | "surprising"; }
+type BookmarkType = "topic" | "related" | "surprising";
+interface Bookmark { topic: string; type: BookmarkType; }
 const MAX_TRAIL = 8;
 
 // ── Rabbit Hole accent — using oak as the module color ────────────────────────
@@ -86,10 +87,10 @@ export default function RabbitPage() {
     if (data) setBookmarks(data as Bookmark[]);
   }, []);
 
-  const isBookmarked = (topic: string, type: "topic" | "related") =>
+  const isBookmarked = (topic: string, type: BookmarkType) =>
     bookmarks.some((b) => b.topic === topic && b.type === type);
 
-  const toggleBookmark = useCallback(async (topic: string, type: "topic" | "related") => {
+  const toggleBookmark = useCallback(async (topic: string, type: BookmarkType) => {
     if (!userId) return;
     if (isBookmarked(topic, type)) {
       setBookmarks((prev) => prev.filter((b) => !(b.topic === topic && b.type === type)));
